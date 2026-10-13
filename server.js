@@ -203,6 +203,12 @@ const server = http.createServer((req, res) => {
               return;
             }
 
+            if (fullName.length < 2 || fullName.length > 60) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ field: 'fullName', error: 'Full name must be between 2 and 60 characters.' }));
+              return;
+            }
+
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
             if (!email || !emailRegex.test(email)) {
               res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -211,9 +217,15 @@ const server = http.createServer((req, res) => {
             }
 
             const phoneDigits = phone.replace(/\D/g, '');
-            if (phoneDigits.length !== 10) {
+            if (phoneDigits.length !== 10 || phone !== phoneDigits) {
               res.writeHead(400, { 'Content-Type': 'application/json' });
               res.end(JSON.stringify({ field: 'phone', error: 'Phone number must be exactly 10 digits.' }));
+              return;
+            }
+
+            if (experience !== undefined && (experience < 0 || experience > 40)) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ field: 'experience', error: 'Experience must be between 0 and 40 years.' }));
               return;
             }
 

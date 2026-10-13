@@ -74,6 +74,7 @@
   const errorPhone = document.getElementById('error-phone');
   const errorExperience = document.getElementById('error-experience');
   const errorResume = document.getElementById('error-resume');
+  const errorCoverLetter = document.getElementById('error-cover-letter');
   const errorConsent = document.getElementById('error-consent');
 
   // Feedback Modals
@@ -140,11 +141,21 @@
       }
     });
 
-    // Application Modal
+    // Application Modal Form & Real-Time Validation Feedback
     btnCancelApplication.addEventListener('click', closeApplicationModal);
     btnCancelAppTop.addEventListener('click', closeApplicationModal);
     jobApplicationForm.addEventListener('submit', handleFormSubmit);
     btnRetrySubmit.addEventListener('click', handleFormSubmit);
+
+    applicantName.addEventListener('input', () => clearSingleFieldError(applicantName, errorName));
+    applicantEmail.addEventListener('input', () => clearSingleFieldError(applicantEmail, errorEmail));
+    applicantPhone.addEventListener('input', () => clearSingleFieldError(applicantPhone, errorPhone));
+    applicantExperience.addEventListener('input', () => clearSingleFieldError(applicantExperience, errorExperience));
+    applicantResume.addEventListener('change', () => clearSingleFieldError(applicantResume, errorResume));
+    if (applicantCoverLetter && errorCoverLetter) {
+      applicantCoverLetter.addEventListener('input', () => clearSingleFieldError(applicantCoverLetter, errorCoverLetter));
+    }
+    applicantConsent.addEventListener('change', () => clearSingleFieldError(null, errorConsent));
 
     // Modals Backdrop Close & Escape Key
     window.addEventListener('keydown', (e) => {
@@ -431,19 +442,41 @@
     duplicateModal.style.display = 'none';
   }
 
+  function clearSingleFieldError(fieldInput, errorSpan) {
+    if (fieldInput) {
+      fieldInput.classList.remove('is-invalid');
+      fieldInput.removeAttribute('aria-invalid');
+      fieldInput.removeAttribute('aria-describedby');
+    }
+    if (errorSpan) {
+      errorSpan.textContent = '';
+      errorSpan.style.display = 'none';
+    }
+  }
+
   function clearFormErrors() {
-    const errorSpans = [errorName, errorEmail, errorPhone, errorExperience, errorResume, errorConsent];
+    const errorSpans = [errorName, errorEmail, errorPhone, errorExperience, errorResume, errorCoverLetter, errorConsent].filter(Boolean);
     errorSpans.forEach(span => {
       span.textContent = '';
       span.style.display = 'none';
     });
 
-    const inputs = [applicantName, applicantEmail, applicantPhone, applicantExperience, applicantResume];
-    inputs.forEach(input => input.classList.remove('is-invalid'));
+    const inputs = [applicantName, applicantEmail, applicantPhone, applicantExperience, applicantResume, applicantCoverLetter].filter(Boolean);
+    inputs.forEach(input => {
+      input.classList.remove('is-invalid');
+      input.removeAttribute('aria-invalid');
+      input.removeAttribute('aria-describedby');
+    });
   }
 
   function setFieldError(fieldInput, errorSpan, message) {
-    if (fieldInput) fieldInput.classList.add('is-invalid');
+    if (fieldInput) {
+      fieldInput.classList.add('is-invalid');
+      fieldInput.setAttribute('aria-invalid', 'true');
+      if (errorSpan && errorSpan.id) {
+        fieldInput.setAttribute('aria-describedby', errorSpan.id);
+      }
+    }
     if (errorSpan) {
       errorSpan.textContent = message;
       errorSpan.style.display = 'block';
@@ -455,7 +488,7 @@
     clearFormErrors();
     let isValid = true;
 
-    // 1. Full Name: Required, min 2 chars, max 50 chars, no whitespace-only
+    // 1. Full Name: Required, min 2 chars, max 60 chars, no whitespace-only
     const nameVal = applicantName.value;
     const trimmedName = nameVal.trim();
     if (!trimmedName) {
@@ -464,8 +497,8 @@
     } else if (trimmedName.length < 2) {
       setFieldError(applicantName, errorName, 'Full name must be at least 2 characters.');
       isValid = false;
-    } else if (trimmedName.length > 50) {
-      setFieldError(applicantName, errorName, 'Full name cannot exceed 50 characters.');
+    } else if (trimmedName.length > 60) {
+      setFieldError(applicantName, errorName, 'Full name cannot exceed 60 characters.');
       isValid = false;
     }
 
@@ -482,23 +515,25 @@
 
     // 3. Phone: Exactly 10 digits
     const phoneVal = applicantPhone.value.trim();
-    const phoneDigits = phoneVal.replace(/\D/g, '');
     if (!phoneVal) {
       setFieldError(applicantPhone, errorPhone, 'Phone number is required.');
       isValid = false;
-    } else if (phoneDigits.length !== 10 || phoneVal !== phoneDigits) {
+    } else if (!/^\d{10}$/.test(phoneVal)) {
       setFieldError(applicantPhone, errorPhone, 'Phone number must be exactly 10 numeric digits.');
       isValid = false;
     }
 
-    // 4. Experience: 0 to 40
-    const expVal = applicantExperience.value;
-    if (expVal === '' || isNaN(expVal)) {
+    // 4. Experience: 0 to 40 years
+    const expVal = String(applicantExperience.value).trim();
+    if (expVal === '' || isNaN(Number(expVal))) {
       setFieldError(applicantExperience, errorExperience, 'Experience is required.');
       isValid = false;
     } else {
       const expNum = Number(expVal);
-      if (expNum < 0 || expNum > 40) {
+      if (expNum < 0) {
+        setFieldError(applicantExperience, errorExperience, 'Experience cannot be negative.');
+        isValid = false;
+      } else if (expNum > 40) {
         setFieldError(applicantExperience, errorExperience, 'Experience must be between 0 and 40 years.');
         isValid = false;
       }
@@ -511,7 +546,7 @@
     } else {
       const file = applicantResume.files[0];
       const validExts = ['.pdf', '.doc', '.docx'];
-      const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+      const fileExt = '.' + (file.name.split('.').pop() || '').toLowerCase();
       if (!validExts.includes(fileExt)) {
         setFieldError(applicantResume, errorResume, 'Only .pdf, .doc, and .docx formats are permitted.');
         isValid = false;
@@ -521,7 +556,16 @@
       }
     }
 
-    // 6. Consent Checkbox
+    // 6. Cover Letter (Optional, max 1000 characters)
+    if (applicantCoverLetter && errorCoverLetter) {
+      const coverVal = applicantCoverLetter.value || '';
+      if (coverVal.length > 1000) {
+        setFieldError(applicantCoverLetter, errorCoverLetter, 'Cover letter cannot exceed 1000 characters.');
+        isValid = false;
+      }
+    }
+
+    // 7. Consent Checkbox
     if (!applicantConsent.checked) {
       setFieldError(null, errorConsent, 'You must agree to the data processing terms.');
       isValid = false;
@@ -670,9 +714,14 @@
       toggleSimOffline.checked = false;
       updateQAStatus();
       await fetchSubmissions();
-      alert('Local test submissions have been reset successfully!');
+      qaStatusPill.textContent = 'Server: Data Store Reset';
+      qaStatusPill.style.color = '#10B981';
+      qaStatusPill.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+      setTimeout(updateQAStatus, 1500);
     } catch {
-      alert('Failed to reset submissions.');
+      qaStatusPill.textContent = 'Server: Reset Failed';
+      qaStatusPill.style.color = '#EF4444';
+      qaStatusPill.style.borderColor = 'rgba(239, 68, 68, 0.4)';
     }
   }
 

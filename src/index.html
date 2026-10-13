@@ -267,8 +267,8 @@
             <label for="applicant-name" class="form-label">
               Full Name <span class="required">*</span>
             </label>
-            <input type="text" id="applicant-name" class="form-input" placeholder="e.g. Jane Doe" required autocomplete="name">
-            <span class="field-error" id="error-name" style="display: none;"></span>
+            <input type="text" id="applicant-name" class="form-input" placeholder="e.g. Jane Doe" maxlength="60" required autocomplete="name">
+            <span class="field-error" id="error-name" style="display: none;" role="alert"></span>
           </div>
 
           <!-- Email Address -->
@@ -277,7 +277,7 @@
               Email Address <span class="required">*</span>
             </label>
             <input type="email" id="applicant-email" class="form-input" placeholder="e.g. jane.doe@example.com" required autocomplete="email">
-            <span class="field-error" id="error-email" style="display: none;"></span>
+            <span class="field-error" id="error-email" style="display: none;" role="alert"></span>
           </div>
 
           <!-- Phone Number & Experience Row -->
@@ -286,8 +286,8 @@
               <label for="applicant-phone" class="form-label">
                 Phone Number <span class="required">*</span>
               </label>
-              <input type="tel" id="applicant-phone" class="form-input" placeholder="10-digit mobile" maxlength="10" required autocomplete="tel">
-              <span class="field-error" id="error-phone" style="display: none;"></span>
+              <input type="tel" id="applicant-phone" class="form-input" placeholder="10-digit mobile" maxlength="15" required autocomplete="tel">
+              <span class="field-error" id="error-phone" style="display: none;" role="alert"></span>
             </div>
 
             <div class="form-group col-half">
@@ -295,7 +295,7 @@
                 Experience (Years) <span class="required">*</span>
               </label>
               <input type="number" id="applicant-experience" class="form-input" min="0" max="40" step="1" value="1" required>
-              <span class="field-error" id="error-experience" style="display: none;"></span>
+              <span class="field-error" id="error-experience" style="display: none;" role="alert"></span>
             </div>
           </div>
 
@@ -306,13 +306,14 @@
             </label>
             <input type="file" id="applicant-resume" class="form-file-input" accept=".pdf,.doc,.docx" required>
             <div class="file-hint">Max file size: 5MB. Accepted formats: PDF, DOC, DOCX.</div>
-            <span class="field-error" id="error-resume" style="display: none;"></span>
+            <span class="field-error" id="error-resume" style="display: none;" role="alert"></span>
           </div>
 
           <!-- Cover Letter -->
           <div class="form-group">
             <label for="applicant-cover-letter" class="form-label">Cover Letter / Note to Recruiter</label>
-            <textarea id="applicant-cover-letter" class="form-textarea" rows="3" placeholder="Tell us why you're a great fit for this position..."></textarea>
+            <textarea id="applicant-cover-letter" class="form-textarea" rows="3" maxlength="1000" placeholder="Tell us why you're a great fit for this position..."></textarea>
+            <span class="field-error" id="error-cover-letter" style="display: none;" role="alert"></span>
           </div>
 
           <!-- Consent Checkbox -->
@@ -321,7 +322,7 @@
               <input type="checkbox" id="applicant-consent" required>
               <span>I confirm that the provided information is accurate and agree to recruitment processing. <span class="required">*</span></span>
             </label>
-            <span class="field-error" id="error-consent" style="display: none;"></span>
+            <span class="field-error" id="error-consent" style="display: none;" role="alert"></span>
           </div>
         </div>
 

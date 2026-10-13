@@ -167,19 +167,72 @@ This document provides formal bug reports, reproduction steps, severity/priority
   1. Submit application for `JOB-101` with email `alex.morgan@example.com`.
   2. Open `JOB-101` again and submit with identical email `alex.morgan@example.com`.
 * **Expected Result**: Server returns HTTP 409 Conflict; portal displays `#duplicate-modal` with warning: `"Duplicate application detected: An application for this role has already been submitted with this email address."`
-* **Actual Result (After Fix)**: Conflict correctly caught and modal displayed; verified in Playwright `TC-14`.
+* **Actual Result (After Fix)**: Conflict correctly caught and modal displayed; verified in Playwright `TC-14` and Option B `Scenario 6`.
 * **Evidence**: Playwright test output:
   ```text
   ok 5 [chromium] › TC-14: Prevent duplicate application submission with identical email for same job (4.6s)
+  ok 6 [chromium] › Scenario 6: Prevents duplicate application submission with identical email for the same job (4.4s)
   ```
+
+---
+
+### BUG-08: HTML `maxlength="10"` on Phone Field Truncated Whitespace-Padded Input & Silent Overflow
+* **Bug ID**: `BUG-08`
+* **Defect Type**: Application Form Implementation Defect (Option B)
+* **Severity**: `S2 (Major)`
+* **Severity Justification**: Hardcoded browser attribute `maxlength="10"` caused silent truncation: (1) pasting a phone with spaces truncated digits before trimming, causing false validation rejections; (2) entering 11 digits silently sliced the last digit into 10 digits without validation error feedback.
+* **Priority**: `P1 (High)`
+* **Target System**: Local Mock Application (`src/index.html`)
+* **Steps to Reproduce**:
+  1. Open Application Modal for role `JOB-101`.
+  2. In "Phone Number", enter `'  9876543210  '` (padded with spaces) or `'12345678901'` (11 digits).
+  3. Submit application.
+* **Expected Result**: Padded input is trimmed and accepted; oversized input displays inline error `"Phone number must be exactly 10 numeric digits."`
+* **Actual Result (Before Fix)**: Padded input was truncated to 8 digits by browser `maxlength="10"`, failing submission; 11 digits was silently clipped to 10 digits without notifying the user.
+* **Actual Result (After Fix)**: Expanded attribute to `maxlength="15"` to allow client validation script to inspect, trim, and display accessible error messages; verified in Playwright Option B Scenarios 4 and 5.
+* **Evidence**: Playwright tests `tests/application-form-validation.spec.js` Scenarios 4 & 5.
+
+---
+
+### BUG-09: Missing Error Container & Accessible `role="alert"` for Cover Letter Boundary Validation
+* **Bug ID**: `BUG-09`
+* **Defect Type**: Accessibility & Form Validation Defect (Option B)
+* **Severity**: `S3 (Minor)`
+* **Severity Justification**: Exceeding 1000 character limit on cover letter had no dedicated error span, and error spans lacked ARIA live region / alert roles for screen readers.
+* **Priority**: `P2 (Medium)`
+* **Target System**: Local Mock Application (`src/index.html`, `src/app.js`)
+* **Steps to Reproduce**:
+  1. Inspect `#applicant-cover-letter` container in `src/index.html`.
+  2. Notice absence of `#error-cover-letter` span.
+  3. Enter > 1000 characters in cover letter.
+* **Expected Result**: Dedicated `<span id="error-cover-letter" role="alert">` renders error message next to cover letter.
+* **Actual Result (Before Fix)**: No error span existed; error could not be rendered inline.
+* **Actual Result (After Fix)**: Added `#error-cover-letter` with `role="alert"` and client-side boundary checking in `validateForm()`; verified in Playwright Option B Scenario 5.
+* **Evidence**: Verified in Option B test suite.
+
+---
+
+### BUG-10: Blocking Browser `alert()` in QA Test Harness Reset Operation
+* **Bug ID**: `BUG-10`
+* **Defect Type**: User Experience & Automation Reliability Defect (Option B)
+* **Severity**: `S3 (Minor)`
+* **Severity Justification**: Native browser `alert()` modal blocked execution thread and interfered with automated CI/CD test harness runs.
+* **Priority**: `P2 (Medium)`
+* **Target System**: Local Mock Application (`src/app.js`)
+* **Steps to Reproduce**:
+  1. Click "Reset Applications" in the QA Test Harness Console.
+* **Expected Result**: Non-blocking toast/pill notification confirms data reset.
+* **Actual Result (Before Fix)**: Browser popup `alert('Local test submissions have been reset successfully!')` blocked page interaction.
+* **Actual Result (After Fix)**: Replaced with non-blocking `#qa-status-pill` UI update; verified in Option B Scenario 10.
+* **Evidence**: `qaStatusPill.textContent = 'Server: Data Store Reset'`.
 
 ---
 
 ## 3. Summary of Test Case Execution Status
 
-| Status | Count | Percentage | Details |
-| :--- | :--- | :--- | :--- |
-| **Passed** | 16 | 80% | All core functional, boundary, positive, and automated Playwright suites passing. |
-| **Blocked / N/A (Live)** | 4 | 20% | Destructive submission scenarios blocked on live government portal per rules; safely verified on mock application. |
-| **Failed** | 0 | 0% | All genuine defects identified during development have been resolved and verified. |
-| **Total** | 20 | 100% | Full scope achieved. |
+| Category | Automated Tests | Pass Count | Fail Count | Pass Rate |
+| :--- | :---: | :---: | :---: | :---: |
+| **Option A — Job Listings & Search Suite** | 9 | 9 | 0 | **100%** |
+| **Option B — Form Validation & Workflow Suite** | 12 | 12 | 0 | **100%** |
+| **Core Workflow End-to-End Suite** | 7 | 7 | 0 | **100%** |
+| **Total Automated Playwright Tests** | **28** | **28** | **0** | **100%** |

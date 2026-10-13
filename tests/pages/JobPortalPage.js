@@ -63,6 +63,7 @@ class JobPortalPage {
     this.errorPhone = page.locator('#error-phone');
     this.errorExperience = page.locator('#error-experience');
     this.errorResume = page.locator('#error-resume');
+    this.errorCoverLetter = page.locator('#error-cover-letter');
     this.errorConsent = page.locator('#error-consent');
 
     // Modals
@@ -163,6 +164,22 @@ class JobPortalPage {
 
   async disableSimDelay() {
     await this.toggleSimDelay.evaluate(el => {
+      // @ts-ignore
+      el.checked = false;
+      el.dispatchEvent(new Event('change'));
+    });
+  }
+
+  async enableSimOffline() {
+    await this.toggleSimOffline.evaluate(el => {
+      // @ts-ignore
+      el.checked = true;
+      el.dispatchEvent(new Event('change'));
+    });
+  }
+
+  async disableSimOffline() {
+    await this.toggleSimOffline.evaluate(el => {
       // @ts-ignore
       el.checked = false;
       el.dispatchEvent(new Event('change'));
