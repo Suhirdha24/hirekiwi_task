@@ -807,6 +807,30 @@ textarea:focus-visible {
 
 .modal-card.modal-sm {
   max-width: 440px;
+  padding: 32px 28px 24px;
+}
+
+.modal-card.modal-sm.text-center,
+.text-center {
+  text-align: center;
+}
+
+.modal-card.modal-sm .modal-title {
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.modal-card.modal-sm .modal-subtitle {
+  text-align: center;
+  margin-bottom: 0;
+  line-height: 1.5;
+}
+
+.modal-card.modal-sm .modal-footer {
+  border-top: none;
+  padding: 16px 0 0;
+  width: 100%;
 }
 
 @keyframes modalIn {
@@ -1192,25 +1216,34 @@ textarea:focus-visible {
 }
 
 .application-ticket {
-  background: var(--bg-surface);
-  border: 1px solid #293854;
-  padding: 14px;
+  background: #0F172A;
+  border: 1px solid #24324D;
+  padding: 16px 20px;
   border-radius: var(--radius-md);
-  margin: 20px 0 10px;
+  margin: 20px 0 16px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 .ticket-label {
   display: block;
   font-size: 0.75rem;
   color: var(--text-dim);
-  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
 }
 
 .ticket-id {
   font-family: var(--font-mono);
-  font-size: 1.25rem;
+  font-size: 1.35rem;
   font-weight: 700;
   color: #818CF8;
+  letter-spacing: 0.05em;
 }
 
 /* Footer */
