@@ -1,10 +1,53 @@
 // Native Node.js Server for Mock Job Application Portal
+try {
+  require('dotenv').config();
+} catch (e) {}
+
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const dns = require('dns');
+
+// Public DNS for reliable SRV resolution on Windows
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch (e) {}
 
 const PORT = process.env.PORT || 3000;
 const PUBLIC_DIR = path.join(__dirname, 'src');
+
+// MongoDB Atlas Integration State
+let mongoClient = null;
+let submissionsCollection = null;
+let isMongoConnected = false;
+
+async function initMongoDB() {
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    console.log('[Database] No MONGODB_URI found; operating in local in-memory mode.');
+    return;
+  }
+  try {
+    const { MongoClient } = require('mongodb');
+    mongoClient = new MongoClient(uri, { serverSelectionTimeoutMS: 5000 });
+    await mongoClient.connect();
+    const db = mongoClient.db('careerhub');
+    submissionsCollection = db.collection('submissions');
+    isMongoConnected = true;
+    console.log('[MongoDB Atlas] Connected successfully to cluster0.lo94xku.mongodb.net/careerhub');
+
+    const existing = await submissionsCollection.find().toArray();
+    if (existing && existing.length > 0) {
+      submissions = existing.map(doc => {
+        const { _id, ...rest } = doc;
+        return rest;
+      });
+      console.log(`[MongoDB Atlas] Synced ${submissions.length} submission(s) into active session store.`);
+    }
+  } catch (err) {
+    console.warn('[MongoDB Atlas] Connection failed; running in fallback in-memory mode:', err.message);
+  }
+}
 
 // In-Memory Database for local mock testing
 let jobs = [
@@ -262,6 +305,11 @@ const server = http.createServer((req, res) => {
               submittedAt: new Date().toISOString()
             };
             submissions.push(submissionRecord);
+            if (isMongoConnected && submissionsCollection) {
+              submissionsCollection.insertOne({ ...submissionRecord }).catch(err => {
+                console.error('[MongoDB Atlas] Insert error:', err.message);
+              });
+            }
 
             res.writeHead(201, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({
@@ -290,7 +338,11 @@ const server = http.createServer((req, res) => {
     // 4. GET /api/submissions
     if (pathname === '/api/submissions' && req.method === 'GET') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ count: submissions.length, submissions }));
+      res.end(JSON.stringify({
+        count: submissions.length,
+        submissions,
+        database: isMongoConnected ? 'MongoDB Atlas' : 'In-Memory Local'
+      }));
       return;
     }
 
@@ -298,6 +350,11 @@ const server = http.createServer((req, res) => {
     if (pathname === '/api/reset' && req.method === 'POST') {
       submissions = [];
       serverSimulation = { simulate500: false, simulateDelayMs: 0 };
+      if (isMongoConnected && submissionsCollection) {
+        submissionsCollection.deleteMany({}).catch(err => {
+          console.error('[MongoDB Atlas] Reset error:', err.message);
+        });
+      }
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ success: true, message: 'Test submissions store and simulation states reset.' }));
       return;
@@ -358,8 +415,10 @@ const server = http.createServer((req, res) => {
 });
 
 if (require.main === module) {
-  server.listen(PORT, () => {
-    console.log(`[Mock Job Portal] Server running on http://localhost:${PORT}`);
+  initMongoDB().finally(() => {
+    server.listen(PORT, () => {
+      console.log(`[CareerHub Portal] Server running on http://localhost:${PORT}`);
+    });
   });
 }
 
