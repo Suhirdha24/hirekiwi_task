@@ -57,7 +57,9 @@
 
       <nav class="nav-menu">
         <a href="#jobs-section" class="nav-link active" id="nav-link-jobs">Explore Jobs</a>
-        <a href="#submissions-section" class="nav-link" id="nav-link-submissions">My Submissions (<span id="submissions-badge-count">0</span>)</a>
+        <button type="button" class="nav-link nav-btn" id="nav-link-candidate">My Applications</button>
+        <a href="#submissions-section" class="nav-link" id="nav-link-submissions">Submissions Audit (<span id="submissions-badge-count">0</span>)</a>
+        <button type="button" class="nav-link nav-btn nav-btn-admin" id="nav-link-admin">Admin Portal</button>
         <a href="#assessment-info" class="nav-link" id="nav-link-guidelines">QA Scope</a>
       </nav>
     </div>
@@ -67,9 +69,9 @@
   <main class="main-content">
     <section class="hero-section">
       <div class="hero-wrapper">
-        <span class="hero-chip">✨ Hiring Openings • Freshers to Experienced</span>
-        <h1 class="hero-title">Discover Verified Roles. <br>Apply with Confidence.</h1>
-        <p class="hero-subtitle">Browse transparent job listings with upfront salaries, clear experience brackets, and streamlined application workflows.</p>
+        <span class="hero-chip">✨ Hiring Openings • Demonstration Recruitment Catalog</span>
+        <h1 class="hero-title">Discover Career Roles. <br>Apply with Confidence.</h1>
+        <p class="hero-subtitle">Explore transparent demonstration job openings with upfront salaries, clear experience brackets, and streamlined application workflows.</p>
 
         <!-- Search & Filter Bar -->
         <div class="search-filter-card" role="search">
@@ -88,6 +90,17 @@
               <option value="Quality Assurance">Quality Assurance</option>
               <option value="Engineering">Engineering</option>
               <option value="Infrastructure">Infrastructure</option>
+            </select>
+            <select id="filter-location" aria-label="Filter by location">
+              <option value="ALL">All Locations</option>
+              <option value="Bangalore">Bangalore (Hybrid)</option>
+              <option value="Remote">Remote (India)</option>
+              <option value="Hyderabad">Hyderabad (On-site)</option>
+              <option value="Pune">Pune (Hybrid)</option>
+            </select>
+            <select id="filter-type" aria-label="Filter by employment type">
+              <option value="ALL">All Types</option>
+              <option value="Full-time">Full-time</option>
             </select>
           </div>
 
@@ -364,6 +377,174 @@
       
       <div class="modal-footer justify-center">
         <button type="button" class="btn-secondary" id="btn-close-duplicate">Dismiss</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Candidate Self-Service Dashboard Modal -->
+  <div class="modal-backdrop" id="candidate-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="candidate-modal-title">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+            <span class="chip-badge">Candidate Self-Service</span>
+            <span class="status-badge" style="background: rgba(16, 185, 129, 0.15); color: #10B981;">Live Sync</span>
+          </div>
+          <h2 class="modal-title" id="candidate-modal-title">My Applications</h2>
+          <p class="modal-subtitle">Track your submitted applications and live recruiter hiring stage status.</p>
+        </div>
+        <button type="button" class="btn-close" id="btn-close-candidate" aria-label="Close candidate modal">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="candidate-lookup-card">
+          <label for="candidate-email-input" class="form-label">Look Up Applications by Candidate Email</label>
+          <div class="lookup-input-row">
+            <input type="email" id="candidate-email-input" class="form-input" placeholder="e.g. sarah.connor@example.com" autocomplete="email">
+            <button type="button" class="btn-primary" id="btn-lookup-candidate">Search Applications</button>
+            <button type="button" class="btn-secondary" id="btn-use-last-email" style="display: none;">Use Recent Email</button>
+          </div>
+          <p class="file-hint" style="margin-top: 6px;">Applications are privately linked to your candidate email address.</p>
+        </div>
+
+        <div id="candidate-results-container" style="display: none; margin-top: 20px;">
+          <div class="candidate-summary-bar">
+            <span>Showing applications for <strong id="candidate-current-email"></strong></span>
+            <span class="metric-pill" id="candidate-apps-count">0 Applications</span>
+          </div>
+
+          <div class="candidate-apps-list" id="candidate-apps-list" style="margin-top: 14px;">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <div class="empty-state" id="candidate-empty-state" style="display: none; margin-top: 20px;">
+          <div class="empty-icon">📂</div>
+          <h3>No applications found</h3>
+          <p>We couldn't find any recorded submissions matching this email. Apply for a role above to track it here!</p>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" id="btn-dismiss-candidate">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recruiter Admin Portal Modal -->
+  <div class="modal-backdrop" id="admin-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="admin-modal-title">
+    <div class="modal-card modal-lg modal-admin">
+      <div class="modal-header">
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+            <span class="chip-badge admin-chip">Recruitment Admin</span>
+            <span class="status-badge" id="admin-auth-badge">Authentication Required</span>
+          </div>
+          <h2 class="modal-title" id="admin-modal-title">Recruiter Management Console</h2>
+          <p class="modal-subtitle">Review candidate submissions, manage pipeline stages, and update hiring statuses.</p>
+        </div>
+        <button type="button" class="btn-close" id="btn-close-admin" aria-label="Close admin modal">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Admin Login View -->
+        <div id="admin-login-view">
+          <div class="admin-auth-card">
+            <div class="auth-icon-badge">🔒</div>
+            <h3>Recruiter Authorization</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin: 8px 0 16px;">Enter administrative access credentials to access candidate pipelines and status management.</p>
+            
+            <form id="admin-login-form">
+              <div class="form-group" style="text-align: left;">
+                <label for="admin-email" class="form-label">Admin Email</label>
+                <input type="email" id="admin-email" class="form-input" value="admin@careerhub.internal" required>
+              </div>
+              <div class="form-group" style="text-align: left; margin-top: 12px;">
+                <label for="admin-passkey" class="form-label">Access Passcode / Key</label>
+                <input type="password" id="admin-passkey" class="form-input" placeholder="Enter admin key (default: careerhub-admin-2026)" required>
+              </div>
+              <div id="admin-login-error" class="field-error" style="display: none; margin: 10px 0;"></div>
+              <div class="form-actions" style="margin-top: 16px; justify-content: center;">
+                <button type="submit" class="btn-primary" id="btn-admin-login">Sign In to Dashboard</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Admin Dashboard View -->
+        <div id="admin-dashboard-view" style="display: none;">
+          <div class="admin-header-bar">
+            <div>
+              <span>Logged in as <strong>Recruiter Admin</strong> (<code style="color: #818CF8;">admin@careerhub.internal</code>)</span>
+            </div>
+            <button type="button" class="btn-secondary btn-sm" id="btn-admin-logout">Sign Out</button>
+          </div>
+
+          <!-- Overview Metric Cards -->
+          <div class="admin-metrics-grid">
+            <div class="admin-metric-card">
+              <span class="metric-title">Total Applications</span>
+              <span class="metric-num" id="admin-metric-total">0</span>
+            </div>
+            <div class="admin-metric-card card-new">
+              <span class="metric-title">New</span>
+              <span class="metric-num" id="admin-metric-new">0</span>
+            </div>
+            <div class="admin-metric-card card-review">
+              <span class="metric-title">Under Review</span>
+              <span class="metric-num" id="admin-metric-review">0</span>
+            </div>
+            <div class="admin-metric-card card-shortlist">
+              <span class="metric-title">Shortlisted</span>
+              <span class="metric-num" id="admin-metric-shortlist">0</span>
+            </div>
+            <div class="admin-metric-card card-rejected">
+              <span class="metric-title">Rejected</span>
+              <span class="metric-num" id="admin-metric-rejected">0</span>
+            </div>
+          </div>
+
+          <!-- Application Filter & Search Controls -->
+          <div class="admin-table-controls">
+            <div class="admin-search-wrap">
+              <input type="text" id="admin-search-input" class="form-input form-input-sm" placeholder="Search candidate, role, email, or ID...">
+            </div>
+            <div class="admin-filter-wrap">
+              <select id="admin-filter-status" class="form-input form-input-sm">
+                <option value="ALL">All Statuses</option>
+                <option value="New">New</option>
+                <option value="Under Review">Under Review</option>
+                <option value="Shortlisted">Shortlisted</option>
+                <option value="Rejected">Rejected</option>
+              </select>
+              <button type="button" class="btn-secondary btn-sm" id="btn-admin-refresh">Refresh</button>
+            </div>
+          </div>
+
+          <!-- Admin Applications Table -->
+          <div class="table-responsive" style="margin-top: 14px;">
+            <table class="submissions-table admin-table" id="admin-table">
+              <thead>
+                <tr>
+                  <th>Tracking ID</th>
+                  <th>Candidate</th>
+                  <th>Applied Role</th>
+                  <th>Exp</th>
+                  <th>Submitted</th>
+                  <th>Current Status</th>
+                  <th>Update Stage</th>
+                </tr>
+              </thead>
+              <tbody id="admin-table-body">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" id="btn-dismiss-admin">Close Console</button>
       </div>
     </div>
   </div>

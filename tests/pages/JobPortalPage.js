@@ -19,10 +19,40 @@ class JobPortalPage {
     // Search & Filter
     this.searchInput = page.locator('#search-input');
     this.filterDepartment = page.locator('#filter-department');
+    this.filterLocation = page.locator('#filter-location');
+    this.filterType = page.locator('#filter-type');
     this.jobsGrid = page.locator('#jobs-grid');
     this.jobCards = page.locator('.job-card');
     this.jobsResultsCount = page.locator('#jobs-results-count');
     this.jobsEmptyState = page.locator('#jobs-empty-state');
+
+    // Candidate Self-Service Portal
+    this.navLinkCandidate = page.locator('#nav-link-candidate');
+    this.candidateModal = page.locator('#candidate-modal');
+    this.candidateEmailInput = page.locator('#candidate-email-input');
+    this.btnLookupCandidate = page.locator('#btn-lookup-candidate');
+    this.candidateResultsContainer = page.locator('#candidate-results-container');
+    this.candidateAppsCount = page.locator('#candidate-apps-count');
+    this.candidateAppsList = page.locator('#candidate-apps-list');
+    this.candidateEmptyState = page.locator('#candidate-empty-state');
+    this.btnCloseCandidate = page.locator('#btn-close-candidate');
+
+    // Recruiter Admin Portal
+    this.navLinkAdmin = page.locator('#nav-link-admin');
+    this.adminModal = page.locator('#admin-modal');
+    this.adminLoginView = page.locator('#admin-login-view');
+    this.adminDashboardView = page.locator('#admin-dashboard-view');
+    this.adminPasskey = page.locator('#admin-passkey');
+    this.btnAdminLogin = page.locator('#btn-admin-login');
+    this.adminLoginError = page.locator('#admin-login-error');
+    this.adminMetricTotal = page.locator('#admin-metric-total');
+    this.adminMetricNew = page.locator('#admin-metric-new');
+    this.adminMetricReview = page.locator('#admin-metric-review');
+    this.adminMetricShortlist = page.locator('#admin-metric-shortlist');
+    this.adminMetricRejected = page.locator('#admin-metric-rejected');
+    this.adminTableBody = page.locator('#admin-table-body');
+    this.btnAdminLogout = page.locator('#btn-admin-logout');
+    this.btnCloseAdmin = page.locator('#btn-close-admin');
 
     // Job Details Modal
     this.jobDetailsModal = page.locator('#job-details-modal');

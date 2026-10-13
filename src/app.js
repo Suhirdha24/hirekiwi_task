@@ -23,6 +23,8 @@
   const searchInput = document.getElementById('search-input');
   const btnClearSearch = document.getElementById('btn-clear-search');
   const filterDepartment = document.getElementById('filter-department');
+  const filterLocation = document.getElementById('filter-location');
+  const filterType = document.getElementById('filter-type');
   const btnClearFiltersHeader = document.getElementById('btn-clear-filters-header');
   const jobsGrid = document.getElementById('jobs-grid');
   const jobsResultsCount = document.getElementById('jobs-results-count');
@@ -90,6 +92,46 @@
   const submissionsTableBody = document.getElementById('submissions-table-body');
   const submissionsBadgeCount = document.getElementById('submissions-badge-count');
 
+  // Candidate Self-Service Dashboard
+  const navLinkCandidate = document.getElementById('nav-link-candidate');
+  const candidateModal = document.getElementById('candidate-modal');
+  const btnCloseCandidate = document.getElementById('btn-close-candidate');
+  const btnDismissCandidate = document.getElementById('btn-dismiss-candidate');
+  const candidateEmailInput = document.getElementById('candidate-email-input');
+  const btnLookupCandidate = document.getElementById('btn-lookup-candidate');
+  const btnUseLastEmail = document.getElementById('btn-use-last-email');
+  const candidateResultsContainer = document.getElementById('candidate-results-container');
+  const candidateCurrentEmail = document.getElementById('candidate-current-email');
+  const candidateAppsCount = document.getElementById('candidate-apps-count');
+  const candidateAppsList = document.getElementById('candidate-apps-list');
+  const candidateEmptyState = document.getElementById('candidate-empty-state');
+
+  // Recruiter Admin Portal
+  const navLinkAdmin = document.getElementById('nav-link-admin');
+  const adminModal = document.getElementById('admin-modal');
+  const btnCloseAdmin = document.getElementById('btn-close-admin');
+  const btnDismissAdmin = document.getElementById('btn-dismiss-admin');
+  const adminLoginView = document.getElementById('admin-login-view');
+  const adminDashboardView = document.getElementById('admin-dashboard-view');
+  const adminLoginForm = document.getElementById('admin-login-form');
+  const adminPasskey = document.getElementById('admin-passkey');
+  const adminLoginError = document.getElementById('admin-login-error');
+  const adminAuthBadge = document.getElementById('admin-auth-badge');
+  const btnAdminLogout = document.getElementById('btn-admin-logout');
+
+  // Admin Dashboard Elements
+  const adminMetricTotal = document.getElementById('admin-metric-total');
+  const adminMetricNew = document.getElementById('admin-metric-new');
+  const adminMetricReview = document.getElementById('admin-metric-review');
+  const adminMetricShortlist = document.getElementById('admin-metric-shortlist');
+  const adminMetricRejected = document.getElementById('admin-metric-rejected');
+  const adminSearchInput = document.getElementById('admin-search-input');
+  const adminFilterStatus = document.getElementById('admin-filter-status');
+  const btnAdminRefresh = document.getElementById('btn-admin-refresh');
+  const adminTableBody = document.getElementById('admin-table-body');
+
+  let adminApplications = [];
+
   // Initialize
   async function init() {
     setupEventListeners();
@@ -121,9 +163,60 @@
     });
 
     filterDepartment.addEventListener('change', applyFilters);
+    if (filterLocation) filterLocation.addEventListener('change', applyFilters);
+    if (filterType) filterType.addEventListener('change', applyFilters);
     btnResetFilters.addEventListener('click', resetFilters);
     if (btnClearFiltersHeader) {
       btnClearFiltersHeader.addEventListener('click', resetFilters);
+    }
+
+    // Candidate Self-Service Modal Listeners
+    if (navLinkCandidate) navLinkCandidate.addEventListener('click', openCandidateModal);
+    if (btnCloseCandidate) btnCloseCandidate.addEventListener('click', closeCandidateModal);
+    if (btnDismissCandidate) btnDismissCandidate.addEventListener('click', closeCandidateModal);
+    if (btnLookupCandidate) btnLookupCandidate.addEventListener('click', () => lookupCandidateApps());
+    if (btnUseLastEmail) btnUseLastEmail.addEventListener('click', () => {
+      const lastEmail = localStorage.getItem('careerhub_last_applied_email');
+      if (lastEmail) {
+        candidateEmailInput.value = lastEmail;
+        lookupCandidateApps(lastEmail);
+      }
+    });
+    if (candidateEmailInput) {
+      candidateEmailInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          lookupCandidateApps();
+        }
+      });
+    }
+
+    // Recruiter Admin Portal Listeners
+    if (navLinkAdmin) navLinkAdmin.addEventListener('click', openAdminModal);
+    if (btnCloseAdmin) btnCloseAdmin.addEventListener('click', closeAdminModal);
+    if (btnDismissAdmin) btnDismissAdmin.addEventListener('click', closeAdminModal);
+    if (adminLoginForm) {
+      adminLoginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const key = adminPasskey ? adminPasskey.value.trim() : '';
+        await verifyAndLoadAdminDashboard(key);
+      });
+    }
+    if (btnAdminLogout) {
+      btnAdminLogout.addEventListener('click', () => {
+        sessionStorage.removeItem('careerhub_admin_key');
+        showAdminLogin();
+      });
+    }
+    if (adminSearchInput) adminSearchInput.addEventListener('input', renderAdminApplications);
+    if (adminFilterStatus) adminFilterStatus.addEventListener('change', renderAdminApplications);
+    if (btnAdminRefresh) {
+      btnAdminRefresh.addEventListener('click', async () => {
+        const key = sessionStorage.getItem('careerhub_admin_key');
+        if (key) {
+          await verifyAndLoadAdminDashboard(key);
+        }
+      });
     }
 
     // Job Details Modal
@@ -164,23 +257,31 @@
         closeApplicationModal();
         closeSuccessModal();
         closeDuplicateModal();
+        closeCandidateModal();
+        closeAdminModal();
       }
     });
 
-    [jobDetailsModal, applicationModal, successModal, duplicateModal].forEach(modal => {
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-          if (modal === jobDetailsModal) {
-            closeDetailsModal(true);
-          } else if (modal === applicationModal) {
-            closeApplicationModal();
-          } else if (modal === successModal) {
-            closeSuccessModal();
-          } else if (modal === duplicateModal) {
-            closeDuplicateModal();
+    [jobDetailsModal, applicationModal, successModal, duplicateModal, candidateModal, adminModal].forEach(modal => {
+      if (modal) {
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) {
+            if (modal === jobDetailsModal) {
+              closeDetailsModal(true);
+            } else if (modal === applicationModal) {
+              closeApplicationModal();
+            } else if (modal === successModal) {
+              closeSuccessModal();
+            } else if (modal === duplicateModal) {
+              closeDuplicateModal();
+            } else if (modal === candidateModal) {
+              closeCandidateModal();
+            } else if (modal === adminModal) {
+              closeAdminModal();
+            }
           }
-        }
-      });
+        });
+      }
     });
 
     // Feedback Modal Buttons
@@ -309,8 +410,10 @@
     const rawQuery = searchInput.value || '';
     const query = rawQuery.trim().toLowerCase();
     const dept = filterDepartment.value || 'ALL';
+    const loc = filterLocation ? filterLocation.value || 'ALL' : 'ALL';
+    const empType = filterType ? filterType.value || 'ALL' : 'ALL';
 
-    const isFiltered = query.length > 0 || dept !== 'ALL';
+    const isFiltered = query.length > 0 || dept !== 'ALL' || loc !== 'ALL' || empType !== 'ALL';
 
     // Show/hide clear filters button in header
     if (btnClearFiltersHeader) {
@@ -322,6 +425,8 @@
 
     const filtered = allJobs.filter(job => {
       const matchesDept = dept === 'ALL' || (job.department && job.department.toLowerCase() === dept.toLowerCase());
+      const matchesLoc = loc === 'ALL' || (job.location && job.location.toLowerCase().includes(loc.toLowerCase()));
+      const matchesType = empType === 'ALL' || (job.type && job.type.toLowerCase().includes(empType.toLowerCase()));
       
       let matchesQuery = true;
       if (tokens.length > 0) {
@@ -340,7 +445,7 @@
         matchesQuery = tokens.every(token => corpus.includes(token));
       }
 
-      return matchesDept && matchesQuery;
+      return matchesDept && matchesLoc && matchesType && matchesQuery;
     });
 
     // Update empty state contextual message if no matches
@@ -351,8 +456,10 @@
         emptyStateMessage.textContent = `No open roles match "${rawQuery.trim()}". Try searching for different skills or keywords.`;
       } else if (dept !== 'ALL') {
         emptyStateMessage.textContent = `No open roles currently listed under the ${dept} department.`;
+      } else if (loc !== 'ALL') {
+        emptyStateMessage.textContent = `No open roles currently listed in ${loc}.`;
       } else {
-        emptyStateMessage.textContent = `We couldn't find any job openings matching your current search or department filter.`;
+        emptyStateMessage.textContent = `We couldn't find any job openings matching your current search or filter selections.`;
       }
     }
 
@@ -363,6 +470,8 @@
     searchInput.value = '';
     btnClearSearch.style.display = 'none';
     filterDepartment.value = 'ALL';
+    if (filterLocation) filterLocation.value = 'ALL';
+    if (filterType) filterType.value = 'ALL';
     if (btnClearFiltersHeader) {
       btnClearFiltersHeader.style.display = 'none';
     }
@@ -440,6 +549,297 @@
 
   function closeDuplicateModal() {
     duplicateModal.style.display = 'none';
+  }
+
+  // =========================================================================
+  // Candidate Self-Service Dashboard Logic
+  // =========================================================================
+  function openCandidateModal() {
+    candidateModal.style.display = 'flex';
+    const lastEmail = localStorage.getItem('careerhub_last_applied_email');
+    if (lastEmail) {
+      if (btnUseLastEmail) btnUseLastEmail.style.display = 'inline-block';
+      if (!candidateEmailInput.value) {
+        candidateEmailInput.value = lastEmail;
+        lookupCandidateApps(lastEmail);
+      }
+    }
+  }
+
+  function closeCandidateModal() {
+    candidateModal.style.display = 'none';
+  }
+
+  async function lookupCandidateApps(explicitEmail) {
+    const email = (explicitEmail || candidateEmailInput.value || '').trim();
+    if (!email) {
+      candidateEmailInput.focus();
+      return;
+    }
+
+    try {
+      btnLookupCandidate.disabled = true;
+      btnLookupCandidate.textContent = 'Searching...';
+
+      const res = await fetch(`/api/candidate/applications?email=${encodeURIComponent(email)}`);
+      const data = await res.json();
+      const apps = data.applications || [];
+
+      candidateCurrentEmail.textContent = email;
+      candidateAppsCount.textContent = `${apps.length} Application${apps.length === 1 ? '' : 's'}`;
+
+      if (apps.length === 0) {
+        candidateResultsContainer.style.display = 'none';
+        candidateEmptyState.style.display = 'block';
+      } else {
+        candidateEmptyState.style.display = 'none';
+        candidateResultsContainer.style.display = 'block';
+
+        candidateAppsList.innerHTML = apps.map(app => {
+          const matchingJob = allJobs.find(j => j.id === app.jobId);
+          const jobTitle = matchingJob ? matchingJob.title : (app.jobTitle || app.jobId);
+          const dept = matchingJob ? matchingJob.department : (app.department || 'Engineering');
+          const statusClass = getStatusBadgeClass(app.status);
+          const dateStr = new Date(app.submittedAt).toLocaleDateString(undefined, {
+            year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+          });
+
+          return `
+            <div class="candidate-app-item">
+              <div class="candidate-app-info">
+                <div class="candidate-app-title">${escapeHtml(jobTitle)}</div>
+                <div class="candidate-app-meta">
+                  <span>Tracking ID: <span class="candidate-app-ticket">${escapeHtml(app.applicationId)}</span></span>
+                  <span>•</span>
+                  <span>Dept: ${escapeHtml(dept)}</span>
+                  <span>•</span>
+                  <span>Submitted: ${escapeHtml(dateStr)}</span>
+                </div>
+              </div>
+              <div>
+                <span class="badge-status ${statusClass}">${escapeHtml(app.status || 'New')}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    } catch (err) {
+      candidateResultsContainer.style.display = 'none';
+      candidateEmptyState.style.display = 'block';
+      const heading = candidateEmptyState.querySelector('h3');
+      if (heading) heading.textContent = 'Lookup Error';
+      const text = candidateEmptyState.querySelector('p');
+      if (text) text.textContent = 'Unable to fetch applications from server.';
+    } finally {
+      btnLookupCandidate.disabled = false;
+      btnLookupCandidate.textContent = 'Search Applications';
+    }
+  }
+
+  // =========================================================================
+  // Recruiter Admin Portal Logic
+  // =========================================================================
+  function openAdminModal() {
+    adminModal.style.display = 'flex';
+    const key = sessionStorage.getItem('careerhub_admin_key');
+    if (key) {
+      verifyAndLoadAdminDashboard(key);
+    } else {
+      showAdminLogin();
+    }
+  }
+
+  function closeAdminModal() {
+    adminModal.style.display = 'none';
+  }
+
+  function showAdminLogin() {
+    adminLoginView.style.display = 'block';
+    adminDashboardView.style.display = 'none';
+    adminAuthBadge.textContent = 'Authentication Required';
+    adminAuthBadge.style.color = '#F59E0B';
+    adminAuthBadge.style.borderColor = 'rgba(245, 158, 11, 0.4)';
+    if (adminLoginError) adminLoginError.style.display = 'none';
+    if (adminPasskey) adminPasskey.value = '';
+  }
+
+  async function verifyAndLoadAdminDashboard(key) {
+    try {
+      const overviewRes = await fetch('/api/admin/overview', {
+        headers: { 'X-Admin-Key': key }
+      });
+
+      if (!overviewRes.ok) {
+        sessionStorage.removeItem('careerhub_admin_key');
+        showAdminLogin();
+        if (adminLoginError) {
+          adminLoginError.textContent = 'Invalid administrative passkey or unauthorized access.';
+          adminLoginError.style.display = 'block';
+        }
+        return false;
+      }
+
+      const overviewData = await overviewRes.json();
+      sessionStorage.setItem('careerhub_admin_key', key);
+
+      // Switch view
+      adminLoginView.style.display = 'none';
+      adminDashboardView.style.display = 'block';
+      adminAuthBadge.textContent = 'Admin Authenticated';
+      adminAuthBadge.style.color = '#10B981';
+      adminAuthBadge.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+
+      // Update metrics
+      updateAdminMetrics(overviewData.metrics);
+
+      // Fetch applications list
+      await fetchAdminApplications(key);
+      return true;
+    } catch (err) {
+      if (adminLoginError) {
+        adminLoginError.textContent = 'Failed to connect to admin API.';
+        adminLoginError.style.display = 'block';
+      }
+      return false;
+    }
+  }
+
+  function updateAdminMetrics(metrics) {
+    if (!metrics) return;
+    if (adminMetricTotal) adminMetricTotal.textContent = metrics.total || 0;
+    if (adminMetricNew) adminMetricNew.textContent = metrics.new || 0;
+    if (adminMetricReview) adminMetricReview.textContent = metrics.underReview || 0;
+    if (adminMetricShortlist) adminMetricShortlist.textContent = metrics.shortlisted || 0;
+    if (adminMetricRejected) adminMetricRejected.textContent = metrics.rejected || 0;
+  }
+
+  async function fetchAdminApplications(key) {
+    try {
+      const res = await fetch('/api/admin/applications', {
+        headers: { 'X-Admin-Key': key }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        adminApplications = data.applications || [];
+        renderAdminApplications();
+      }
+    } catch (_) {}
+  }
+
+  function renderAdminApplications() {
+    const query = (adminSearchInput ? adminSearchInput.value : '').trim().toLowerCase();
+    const statusFilter = adminFilterStatus ? adminFilterStatus.value : 'ALL';
+
+    const filtered = adminApplications.filter(app => {
+      const matchesStatus = statusFilter === 'ALL' || (app.status || 'New').toLowerCase() === statusFilter.toLowerCase();
+      let matchesQuery = true;
+      if (query) {
+        const corpus = `${app.applicationId} ${app.fullName} ${app.email} ${app.jobTitle || app.jobId}`.toLowerCase();
+        matchesQuery = corpus.includes(query);
+      }
+      return matchesStatus && matchesQuery;
+    });
+
+    if (filtered.length === 0) {
+      adminTableBody.innerHTML = `
+        <tr>
+          <td colspan="7" class="text-center" style="text-align: center; color: var(--text-dim); padding: 24px;">
+            No applications match current criteria.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    adminTableBody.innerHTML = filtered.map(app => {
+      const matchingJob = allJobs.find(j => j.id === app.jobId);
+      const jobTitle = matchingJob ? matchingJob.title : (app.jobTitle || app.jobId);
+      const statusClass = getStatusBadgeClass(app.status);
+      const dateStr = new Date(app.submittedAt).toLocaleDateString([], {
+        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+      });
+
+      return `
+        <tr id="admin-row-${app.applicationId}">
+          <td><code style="color: #818CF8; font-weight: 700;">${escapeHtml(app.applicationId)}</code></td>
+          <td>
+            <strong>${escapeHtml(app.fullName)}</strong>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">${escapeHtml(app.email)}</div>
+          </td>
+          <td>${escapeHtml(jobTitle)}</td>
+          <td>${escapeHtml(String(app.experience))} yrs</td>
+          <td>${escapeHtml(dateStr)}</td>
+          <td><span class="badge-status ${statusClass}" id="badge-${app.applicationId}">${escapeHtml(app.status || 'New')}</span></td>
+          <td>
+            <select class="admin-status-select" data-app-id="${app.applicationId}" aria-label="Update status for ${escapeHtml(app.fullName)}">
+              <option value="New" ${app.status === 'New' ? 'selected' : ''}>New</option>
+              <option value="Under Review" ${app.status === 'Under Review' ? 'selected' : ''}>Under Review</option>
+              <option value="Shortlisted" ${app.status === 'Shortlisted' ? 'selected' : ''}>Shortlisted</option>
+              <option value="Rejected" ${app.status === 'Rejected' ? 'selected' : ''}>Rejected</option>
+            </select>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    // Attach change handlers to status selectors
+    adminTableBody.querySelectorAll('.admin-status-select').forEach(select => {
+      select.addEventListener('change', async (e) => {
+        const appId = e.target.getAttribute('data-app-id');
+        const newStatus = e.target.value;
+        await updateApplicationStatus(appId, newStatus, select);
+      });
+    });
+  }
+
+  async function updateApplicationStatus(applicationId, newStatus, selectEl) {
+    const key = sessionStorage.getItem('careerhub_admin_key');
+    if (!key) return;
+
+    try {
+      selectEl.disabled = true;
+      const res = await fetch(`/api/admin/applications/${encodeURIComponent(applicationId)}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Key': key
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      if (res.ok) {
+        // Update local state
+        const target = adminApplications.find(a => a.applicationId === applicationId || a.id === applicationId);
+        if (target) target.status = newStatus;
+
+        // Update badge
+        const badge = document.getElementById(`badge-${applicationId}`);
+        if (badge) {
+          badge.textContent = newStatus;
+          badge.className = `badge-status ${getStatusBadgeClass(newStatus)}`;
+        }
+
+        // Refresh overview metrics
+        const overviewRes = await fetch('/api/admin/overview', {
+          headers: { 'X-Admin-Key': key }
+        });
+        if (overviewRes.ok) {
+          const overviewData = await overviewRes.json();
+          updateAdminMetrics(overviewData.metrics);
+        }
+      }
+    } catch (_) {
+    } finally {
+      selectEl.disabled = false;
+    }
+  }
+
+  function getStatusBadgeClass(status) {
+    const s = (status || 'New').toLowerCase();
+    if (s.includes('review')) return 'badge-status-review';
+    if (s.includes('shortlist')) return 'badge-status-shortlisted';
+    if (s.includes('reject')) return 'badge-status-rejected';
+    return 'badge-status-new';
   }
 
   function clearSingleFieldError(fieldInput, errorSpan) {
@@ -634,6 +1034,9 @@
         jobApplicationForm.reset();
         successAppId.textContent = result.applicationId;
         successModal.style.display = 'flex';
+        try {
+          localStorage.setItem('careerhub_last_applied_email', payload.email);
+        } catch (_) {}
         await fetchSubmissions();
       } else if (response.status === 409) {
         // Duplicate Submission Detected

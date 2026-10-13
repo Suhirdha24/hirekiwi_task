@@ -20,6 +20,7 @@ try {
 const PORT = parseInt(process.env.PORT, 10) || 3000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || '*';
+const ADMIN_KEY = process.env.ADMIN_KEY || 'careerhub-admin-2026';
 const PUBLIC_DIR = path.join(__dirname, 'src');
 
 // MongoDB Atlas Integration State
@@ -242,8 +243,8 @@ const server = http.createServer((req, res) => {
 
   // Enable CORS & JSON headers
   res.setHeader('Access-Control-Allow-Origin', CLIENT_ORIGIN);
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Simulate-Error, X-Simulate-Delay');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Simulate-Error, X-Simulate-Delay, X-Admin-Key');
 
   if (req.method === 'OPTIONS') {
     res.writeHead(204);
@@ -282,12 +283,36 @@ const server = http.createServer((req, res) => {
       return;
     }
 
-    // 1. GET /api/jobs — Retrieve verified job listings
+    // 1. GET /api/jobs — Retrieve verified job listings (supports query, department, location, type)
     if (pathname === '/api/jobs' && req.method === 'GET') {
+      const q = (parsedUrl.searchParams.get('q') || '').toLowerCase().trim();
+      const dept = (parsedUrl.searchParams.get('department') || 'ALL').trim();
+      const loc = (parsedUrl.searchParams.get('location') || 'ALL').trim();
+      const type = (parsedUrl.searchParams.get('type') || 'ALL').trim();
+
+      let filtered = [...jobs];
+      if (dept && dept !== 'ALL') {
+        filtered = filtered.filter(j => j.department === dept);
+      }
+      if (loc && loc !== 'ALL') {
+        filtered = filtered.filter(j => (j.location || '').toLowerCase().includes(loc.toLowerCase()));
+      }
+      if (type && type !== 'ALL') {
+        filtered = filtered.filter(j => (j.type || '').toLowerCase() === type.toLowerCase());
+      }
+      if (q) {
+        filtered = filtered.filter(j => 
+          j.title.toLowerCase().includes(q) ||
+          j.department.toLowerCase().includes(q) ||
+          (j.tags && j.tags.some(t => t.toLowerCase().includes(q))) ||
+          j.description.toLowerCase().includes(q)
+        );
+      }
+
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
-        jobs,
-        total: jobs.length,
+        jobs: filtered,
+        total: filtered.length,
         source: isMongoConnected ? 'mongodb' : 'memory'
       }));
       return;
@@ -417,6 +442,7 @@ const server = http.createServer((req, res) => {
               experience: Number(experience),
               resumeName: data.resumeName || 'resume.pdf',
               coverLetter: (data.coverLetter || '').trim().slice(0, 1000),
+              status: 'New',
               submittedAt: new Date().toISOString()
             };
 
@@ -456,7 +482,139 @@ const server = http.createServer((req, res) => {
       return;
     }
 
-    // 4. GET /api/submissions & GET /api/applications — Registry for audit & verification
+    // 4. GET /api/candidate/applications — Retrieve applications for a specific candidate by email
+    if (pathname === '/api/candidate/applications' && req.method === 'GET') {
+      const emailQuery = (parsedUrl.searchParams.get('email') || '').trim().toLowerCase();
+      if (!emailQuery) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Candidate email query parameter is required.' }));
+        return;
+      }
+      const candidateApps = submissions.filter(s => (s.email || '').toLowerCase() === emailQuery);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        email: emailQuery,
+        count: candidateApps.length,
+        applications: candidateApps
+      }));
+      return;
+    }
+
+    // 5. GET /api/admin/overview — Protected Admin summary metrics
+    if (pathname === '/api/admin/overview' && req.method === 'GET') {
+      const adminKey = req.headers['x-admin-key'] || parsedUrl.searchParams.get('key');
+      if (adminKey !== ADMIN_KEY) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Unauthorized: Valid admin access key required.' }));
+        return;
+      }
+      const total = submissions.length;
+      const newCount = submissions.filter(s => (s.status || 'New') === 'New').length;
+      const underReview = submissions.filter(s => s.status === 'Under Review').length;
+      const shortlisted = submissions.filter(s => s.status === 'Shortlisted').length;
+      const rejected = submissions.filter(s => s.status === 'Rejected').length;
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        metrics: {
+          total,
+          new: newCount,
+          underReview,
+          shortlisted,
+          rejected
+        }
+      }));
+      return;
+    }
+
+    // 6. GET /api/admin/applications — Protected Admin applications listing
+    if (pathname === '/api/admin/applications' && req.method === 'GET') {
+      const adminKey = req.headers['x-admin-key'] || parsedUrl.searchParams.get('key');
+      if (adminKey !== ADMIN_KEY) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Unauthorized: Valid admin access key required.' }));
+        return;
+      }
+      const query = (parsedUrl.searchParams.get('q') || '').toLowerCase().trim();
+      const statusFilter = (parsedUrl.searchParams.get('status') || 'ALL').trim();
+
+      let results = [...submissions];
+      if (statusFilter && statusFilter !== 'ALL') {
+        results = results.filter(s => (s.status || 'New') === statusFilter);
+      }
+      if (query) {
+        results = results.filter(s => 
+          (s.fullName || '').toLowerCase().includes(query) ||
+          (s.email || '').toLowerCase().includes(query) ||
+          (s.jobTitle || '').toLowerCase().includes(query) ||
+          (s.applicationId || '').toLowerCase().includes(query)
+        );
+      }
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        count: results.length,
+        total: submissions.length,
+        applications: results
+      }));
+      return;
+    }
+
+    // 7. PATCH/POST /api/admin/applications/:id/status — Authorized application status updates
+    if (pathname.startsWith('/api/admin/applications/') && pathname.endsWith('/status') && (req.method === 'PATCH' || req.method === 'POST')) {
+      const adminKey = req.headers['x-admin-key'] || parsedUrl.searchParams.get('key');
+      if (adminKey !== ADMIN_KEY) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Unauthorized: Valid admin access key required.' }));
+        return;
+      }
+      const parts = pathname.split('/');
+      const appId = parts[4];
+      let body = '';
+      req.on('data', chunk => { body += chunk; });
+      req.on('end', async () => {
+        try {
+          const { status } = JSON.parse(body || '{}');
+          const validStatuses = ['New', 'Under Review', 'Shortlisted', 'Rejected'];
+          if (!status || !validStatuses.includes(status)) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` }));
+            return;
+          }
+          const app = submissions.find(s => s.applicationId === appId);
+          if (!app) {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Application record not found.', applicationId: appId }));
+            return;
+          }
+          app.status = status;
+          app.updatedAt = new Date().toISOString();
+
+          if (isMongoConnected && applicationsCollection) {
+            try {
+              await applicationsCollection.updateOne(
+                { applicationId: appId },
+                { $set: { status, updatedAt: app.updatedAt } }
+              );
+            } catch (err) {
+              console.error('[MongoDB Atlas] Status update error:', err.message);
+            }
+          }
+
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            success: true,
+            message: `Application ${appId} status updated to ${status}.`,
+            application: app
+          }));
+        } catch {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Malformed JSON payload.' }));
+        }
+      });
+      return;
+    }
+
+    // 8. GET /api/submissions & GET /api/applications — Registry for audit & verification
     if ((pathname === '/api/submissions' || pathname === '/api/applications') && req.method === 'GET') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
