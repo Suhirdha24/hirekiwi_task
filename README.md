@@ -10,20 +10,34 @@
 
 ---
 
+## 📋 Assessment QA Deliverables Index
+
+All five core assessment deliverables are fully authored, structured, and available in the repository:
+
+| Deliverable | Document File | Description |
+| :--- | :--- | :--- |
+| **1. Master Test Plan** | [`docs/test-plan.md`](docs/test-plan.md) | Dedicated test plan defining testing scope, dual-environment strategy, risks, automation architecture, and entry/exit criteria. |
+| **2. Detailed Test Cases (26 Cases)** | [`docs/test-cases.md`](docs/test-cases.md) | 26 prioritized test cases (`TC-01` to `TC-26`) with preconditions, reproduction steps, test data, expected vs actual results, and automation mapping. |
+| **3. Automated Test Suite (36 Tests)** | [`tests/`](tests/) & [`docs/test-execution-report.md`](docs/test-execution-report.md) | 36 automated Playwright end-to-end tests across 4 modular specs with 100% pass rate. |
+| **4. Comprehensive Bug Reports (10 Defects)** | [`docs/bug-reports.md`](docs/bug-reports.md) | 10 complete defect reports with step-by-step reproduction instructions, expected vs actual behavior, severity, priority, and verified resolutions. |
+| **5. Test Execution Evidence & Matrix** | [`docs/test-execution-report.md`](docs/test-execution-report.md) | Execution summary, test duration timings, cross-browser/device viewport matrix (Desktop, Tablet, Mobile), and artifact archives. |
+
+---
+
 ## 📌 Table of Contents
-1. [Project Overview & Key Capabilities](#-project-overview--key-capabilities)
-2. [Technology Stack & Architecture](#-technology-stack--architecture)
-3. [Design System & UI/UX Enhancements](#-design-system--uiux-enhancements)
-4. [Candidate Discovery & Self-Service Portal](#-candidate-discovery--self-service-portal)
-5. [Recruiter Admin Portal & Stage Management](#-recruiter-admin-portal--stage-management)
-6. [Backend, REST APIs & MongoDB Atlas Integration](#-backend-rest-apis--mongodb-atlas-integration)
-7. [QA Test Harness Console](#-qa-test-harness-console)
-8. [Automated Playwright Test Suite](#-automated-playwright-test-suite)
-9. [Detailed Test Plan & Manual Test Matrix](#-detailed-test-plan--manual-test-matrix)
-10. [Defect Summary & Findings](#-defect-summary--findings)
-11. [Quick Start & Setup Instructions](#-quick-start--setup-instructions)
-12. [Environment Configuration](#-environment-configuration)
-13. [Authorship & Submission Details](#-authorship--submission-details)
+1. [Assessment QA Deliverables Index](#-assessment-qa-deliverables-index)
+2. [Project Overview & Key Capabilities](#-project-overview--key-capabilities)
+3. [Technology Stack & Architecture](#-technology-stack--architecture)
+4. [Design System & UI/UX Enhancements](#-design-system--uiux-enhancements)
+5. [Candidate Discovery & Self-Service Portal](#-candidate-discovery--self-service-portal)
+6. [Recruiter Admin Portal & Stage Management](#-recruiter-admin-portal--stage-management)
+7. [Backend, REST APIs & MongoDB Atlas Integration](#-backend-rest-apis--mongodb-atlas-integration)
+8. [QA Test Harness Console](#-qa-test-harness-console)
+9. [Automated Playwright Test Suite](#-automated-playwright-test-suite)
+10. [Detailed Test Plan & Manual Test Matrix](#-detailed-test-plan--manual-test-matrix)
+11. [Defect Summary & Complete Bug Reports](#-defect-summary--complete-bug-reports)
+12. [Quick Start & Setup Instructions](#-quick-start--setup-instructions)
+13. [Environment Configuration](#-environment-configuration)
 
 ---
 
@@ -41,7 +55,7 @@ CareerHub combines realistic candidate-facing workflows with powerful quality en
 | **Recruiter Admin Console** | Passcode authentication, live metrics cards, candidate application table, interactive stage updates | ✅ Secure Server Access Control |
 | **MongoDB Atlas Backend** | Native Node.js HTTP/Express API, MongoDB Atlas cloud cluster syncing, in-memory resilient fallback | ✅ Dual-Mode Operational |
 | **QA Test Harness** | Injected 3s network latency, simulated HTTP 500 server error, simulated network drop, data reset | ✅ Non-Destructive |
-| **Playwright Test Suite** | 35 automated scenarios covering functional, boundary, negative, error, and responsive behavior | ✅ 35 / 35 Passing (100%) |
+| **Playwright Test Suite** | 36 automated scenarios covering functional, boundary, negative, error, and responsive behavior | ✅ 36 / 36 Passing (100%) |
 
 ---
 
@@ -168,10 +182,10 @@ The persistent QA Test Controller pinned to the top of the viewport enables non-
 
 ## 📊 Automated Playwright Test Suite
 
-The test suite contains **35 automated end-to-end tests** structured across 4 modular test specification files using the Page Object Model (`JobPortalPage.js`):
+The test suite contains **36 automated end-to-end tests** structured across 4 modular test specification files using the Page Object Model (`JobPortalPage.js`):
 
 ```text
-Running 35 tests using 1 worker
+Running 36 tests using 1 worker
 
   ✓ tests/application-form-validation.spec.js (12 tests)
     ✓ Scenario 1: Valid application produces clear success message and tracking ID
@@ -187,7 +201,7 @@ Running 35 tests using 1 worker
     ✓ Scenario 11: Successful submission updates audit table with ID, candidate, and status badge
     ✓ Scenario 12: Preserves all entered form values after recoverable HTTP 500 failure
 
-  ✓ tests/candidate-admin-portal.spec.js (7 tests)
+  ✓ tests/candidate-admin-portal.spec.js (8 tests)
     ✓ Scenario 1: Multi-attribute job filtering by location and employment type works in tandem
     ✓ Scenario 2: Direct "Apply Now" button on job card opens application modal with target job
     ✓ Scenario 3: Candidate Self-Service Dashboard isolates application records by candidate email
@@ -195,6 +209,7 @@ Running 35 tests using 1 worker
     ✓ Scenario 5: Admin metrics overview accurately aggregates live application stage counts
     ✓ Scenario 6: Admin updates hiring stage to Shortlisted with live synchronization to Candidate Portal
     ✓ Scenario 7: Responsive adaptation across mobile (375x667) and tablet (768x1024) viewports
+    ✓ Scenario 8: Security regression audit — unauthorized admin endpoints, candidate data privacy, and security headers
 
   ✓ tests/job-application-workflow.spec.js (7 tests)
     ✓ TC-01/02/03: Verify job listings display correct metadata, search filtering, and role navigation
@@ -217,7 +232,7 @@ Running 35 tests using 1 worker
     ✓ Check 9: Responsive UI remains functional without horizontal overflow across viewports
 
   ==============================
-  35 passed (100% Pass Rate)
+  36 passed (100% Pass Rate)
   ==============================
 ```
 
@@ -252,25 +267,145 @@ Running 35 tests using 1 worker
 | **TC-23** | Recruiter Admin live overview metrics aggregation | **P1** | Automated | Pass |
 | **TC-24** | Recruiter Admin stage update synchronization with Candidate Dashboard | **P0** | Automated | Pass |
 | **TC-25** | Responsive layout across mobile (375px), tablet (768px), and desktop (1280px) | **P1** | Automated | Pass |
+| **TC-26** | Security Regression Audit (Admin 401 guard, candidate isolation, security headers, secrets sanitization) | **P0** | Automated | Pass |
 
 ---
 
-## 🐛 Defect Summary & Findings
+## 🐛 Defect Summary & Complete Bug Reports
 
-Defects identified and resolved during portal enhancement:
+The QA audit identified, reproduced, and verified 10 core defects across the recruitment workflow and infrastructure. Full formal reports, DOM snippets, and execution traces are cataloged in [`docs/bug-reports.md`](docs/bug-reports.md). The confirmed defects with step-by-step reproduction instructions and verified resolutions are detailed below:
 
-1. **BUG-01 (Severity: High / Priority: P0)**: Duplicate submission race condition allowed multiple records on fast repeated clicks.
-   * *Resolution*: Implemented timestamp-based debouncing guard (< 400ms) and button disabling with animated spinner.
-2. **BUG-02 (Severity: High / Priority: P0)**: Whitespace-only string evasion bypassed required name/email validation.
-   * *Resolution*: Added strict `.trim()` sanitization and minimum length boundary checks before validation acceptance.
-3. **BUG-03 (Severity: Critical / Priority: P0)**: Unhandled HTTP 500 server responses cleared entered form data.
-   * *Resolution*: Implemented non-destructive alert banner retaining all candidate form inputs for safe retry.
-4. **BUG-04 (Severity: Medium / Priority: P1)**: Missing phone number boundary checks allowed alphanumeric strings.
-   * *Resolution*: Enforced strict 10-digit numeric constraint with accessible inline validation feedback.
-5. **BUG-05 (Severity: High / Priority: P0)**: Administrative endpoints were unprotected without authentication.
-   * *Resolution*: Added `X-Admin-Key` header verification on backend and passkey login modal on frontend.
-6. **BUG-06 (Severity: Medium / Priority: P1)**: Candidate application records were exposed without ownership checks.
-   * *Resolution*: Added email-based candidate ownership filtering to isolate applications to their respective applicants.
+### BUG-01: Rapid Double-Click Repeat Submission Race Condition
+* **Severity**: `High (S2)` | **Priority**: `P0 (Critical)`
+* **Feature Affected**: Application Form Submission Handler & Concurrency Protection
+* **Preconditions**: Candidate fills valid inputs in Application Modal for `JOB-101`.
+* **Steps to Reproduce**:
+  1. Open Application Modal for role `JOB-101`.
+  2. Fill valid candidate details (`name`, `email`, `phone`, `resume.pdf`, `consent`).
+  3. Rapidly double-click or triple-click the "Submit Application" button (< 150ms interval).
+* **Expected Behavior**: Submit button disables immediately upon first click with an active spinner; exactly 1 API call is dispatched; exactly 1 candidate application record is created.
+* **Actual Behavior (Before Fix)**: Unprotected submit button dispatched multiple concurrent POST requests, resulting in duplicate database records and multiple confirmation modals.
+* **Evidence & Resolution**: Resolved via client-side debouncing lock (`lastSubmitTime < 400ms`), instant button disabling, and animated loading spinner. Verified by automated test `TC-13` in [`tests/job-application-workflow.spec.js`](tests/job-application-workflow.spec.js) and Scenario 7 in [`tests/application-form-validation.spec.js`](tests/application-form-validation.spec.js).
+
+---
+
+### BUG-02: Whitespace-Only String Evasion of Required Fields
+* **Severity**: `High (S2)` | **Priority**: `P1 (High)`
+* **Feature Affected**: Input Validation & Data Sanitization
+* **Preconditions**: Application form is open.
+* **Steps to Reproduce**:
+  1. Open the application form for any job opening.
+  2. In "Full Name", enter 5 space characters (`"     "`).
+  3. In "Email Address", enter `"     "`.
+  4. Click "Submit Application".
+* **Expected Behavior**: Validation engine trims whitespace, detects empty input, blocks submission, and displays inline accessible error: `"Full name cannot be empty or only spaces."`.
+* **Actual Behavior (Before Fix)**: Validation checked `.length > 0` without trimming; whitespace strings bypassed required field guards, creating blank candidate records in the database.
+* **Evidence & Resolution**: Implemented strict `.trim()` sanitization across both frontend (`src/app.js`) and backend (`server.js`). Verified by automated test Scenario 4 in [`tests/application-form-validation.spec.js`](tests/application-form-validation.spec.js).
+
+---
+
+### BUG-03: Unhandled HTTP 500 Server Error Wipes Candidate Form Input
+* **Severity**: `Critical (S1)` | **Priority**: `P0 (Critical)`
+* **Feature Affected**: Server Error Handling & Form State Preservation
+* **Preconditions**: "Simulate HTTP 500" toggle is enabled in the QA Test Harness Console.
+* **Steps to Reproduce**:
+  1. Enable "Simulate HTTP 500" in the QA Console toolbar.
+  2. Open application form and fill all fields including a multi-paragraph cover letter.
+  3. Click "Submit Application".
+* **Expected Behavior**: Application displays a non-destructive alert banner: `"Server Error (HTTP 500): Simulated database connection failure."`; all candidate inputs and cover letter text remain intact for safe retry.
+* **Actual Behavior (Before Fix)**: Unhandled rejection either triggered a native modal or reset the form, destroying all user-entered data and requiring re-entry from scratch.
+* **Evidence & Resolution**: Implemented non-destructive `#form-error-banner` in `src/app.js` with full form value preservation. Verified by automated test Scenario 12 in [`tests/application-form-validation.spec.js`](tests/application-form-validation.spec.js).
+
+---
+
+### BUG-04: Duplicate Candidate Application Allowed for Same Role
+* **Severity**: `High (S2)` | **Priority**: `P0 (Critical)`
+* **Feature Affected**: Candidate Uniqueness & Duplicate Detection
+* **Preconditions**: Candidate `"alex.morgan@example.com"` has previously submitted an application for `JOB-101`.
+* **Steps to Reproduce**:
+  1. Submit a valid application for `JOB-101` with email `alex.morgan@example.com`.
+  2. Open `JOB-101` again and submit with the same email `alex.morgan@example.com`.
+* **Expected Behavior**: Server rejects submission with `HTTP 409 Conflict`; portal displays warning modal `#duplicate-modal` explaining an application already exists for this role.
+* **Actual Behavior (Before Fix)**: Portal accepted unlimited duplicate submissions for the same candidate email and role, flooding the ATS with redundant records.
+* **Evidence & Resolution**: Backend enforces unique `email + jobId` constraint in `server.js` and returns `HTTP 409`; frontend handles 409 with dedicated duplicate warning dialog. Verified by automated test `TC-14` and Scenario 6 in [`tests/application-form-validation.spec.js`](tests/application-form-validation.spec.js).
+
+---
+
+### BUG-05: Browser `maxlength="10"` Silently Truncates Phone Inputs
+* **Severity**: `Major (S2)` | **Priority**: `P1 (High)`
+* **Feature Affected**: Phone Number Boundary Validation & Format Feedback
+* **Preconditions**: Application modal is open.
+* **Steps to Reproduce**:
+  1. In Phone Number, paste whitespace-padded phone number: `'  9876543210  '`.
+  2. Alternatively, enter 11 digits: `'12345678901'`.
+  3. Click "Submit Application".
+* **Expected Behavior**: Padded numbers are automatically trimmed and accepted; oversized inputs display clear inline error: `"Phone number must be exactly 10 numeric digits."`.
+* **Actual Behavior (Before Fix)**: Browser attribute `maxlength="10"` silently truncated padded strings to 8 digits (failing submission) and truncated 11 digits to 10 without user feedback.
+* **Evidence & Resolution**: Expanded HTML input to `maxlength="15"` to allow the JavaScript/backend validation engine to inspect the full input and display accessible error feedback. Verified by Playwright Scenario 5 in [`tests/application-form-validation.spec.js`](tests/application-form-validation.spec.js).
+
+---
+
+### BUG-06: Missing Cover Letter Error Container & Absent ARIA Alert Roles
+* **Severity**: `Minor (S3)` | **Priority**: `P2 (Medium)`
+* **Feature Affected**: Form Boundary Error Accessibility (WCAG 2.1 AA)
+* **Preconditions**: Application modal is open.
+* **Steps to Reproduce**:
+  1. Enter > 1000 characters in the Cover Letter field.
+  2. Click "Submit Application".
+* **Expected Behavior**: Dedicated `<span id="error-cover-letter" role="alert">` element renders inline error message and is announced by assistive screen readers.
+* **Actual Behavior (Before Fix)**: No error container existed for the cover letter; errors could not render inline; existing error spans lacked `role="alert"`.
+* **Evidence & Resolution**: Added dedicated `#error-cover-letter` container with `role="alert"` in `src/index.html` and integrated dynamic error clearing. Verified by Playwright Scenario 5 in [`tests/application-form-validation.spec.js`](tests/application-form-validation.spec.js).
+
+---
+
+### BUG-07: Blocking Native Browser `alert()` in QA Test Harness Reset
+* **Severity**: `Minor (S3)` | **Priority**: `P2 (Medium)`
+* **Feature Affected**: QA Test Harness Console & Automation Reliability
+* **Preconditions**: Candidate applications exist in session storage.
+* **Steps to Reproduce**:
+  1. Click "Reset Applications" in the QA Test Harness toolbar.
+* **Expected Behavior**: Non-blocking `#qa-status-pill` updates with confirmation message; automated test scripts continue execution unimpeded.
+* **Actual Behavior (Before Fix)**: Native `window.alert()` halted the JavaScript execution thread, requiring manual modal dismissal and causing Playwright automation timeouts.
+* **Evidence & Resolution**: Replaced modal popup with non-blocking toast pill notification `#qa-status-pill`. Verified by Playwright Scenario 10 in [`tests/application-form-validation.spec.js`](tests/application-form-validation.spec.js).
+
+---
+
+### BUG-08: Administrative Endpoints Lacked Authentication Guards
+* **Severity**: `Critical (S1)` | **Priority**: `P0 (Critical)`
+* **Feature Affected**: Recruiter Admin Console & REST API Security
+* **Preconditions**: Application server is running on `http://localhost:3000`.
+* **Steps to Reproduce**:
+  1. Send direct unauthenticated HTTP requests: `GET /api/admin/applications` and `PATCH /api/admin/applications/:id/status`.
+* **Expected Behavior**: Server rejects unauthenticated requests with `HTTP 401 Unauthorized` (`{ error: 'Unauthorized: Valid X-Admin-Key header required' }`).
+* **Actual Behavior (Before Fix)**: All candidate records and hiring stage update endpoints were publicly readable and mutable without authentication.
+* **Evidence & Resolution**: Implemented `X-Admin-Key` authorization middleware in `server.js` and secure passkey modal in `src/app.js`. Verified by automated test Scenario 4 & 8 in [`tests/candidate-admin-portal.spec.js`](tests/candidate-admin-portal.spec.js).
+
+---
+
+### BUG-09: Candidate Application Records Exposed Without Ownership Isolation
+* **Severity**: `High (S2)` | **Priority**: `P0 (Critical)`
+* **Feature Affected**: Candidate Self-Service Dashboard & Data Privacy
+* **Preconditions**: Applications exist for Candidate A (`eleanor.vance@hillhouse.org`) and Candidate B (`alex.morgan@example.com`).
+* **Steps to Reproduce**:
+  1. Query `GET /api/candidate/applications?email=stranger@external.com`.
+  2. Send query with missing or invalid email format.
+* **Expected Behavior**: Endpoint validates email format (`HTTP 400` on invalid syntax) and strictly returns only records matching the applicant's exact email address.
+* **Actual Behavior (Before Fix)**: Endpoint lacked input validation and could potentially expose cross-candidate application records.
+* **Evidence & Resolution**: Implemented RFC email syntax validation (`HTTP 400`) and strict ownership isolation in `server.js` and `src/app.js`. Verified by automated test Scenario 3 & 8 in [`tests/candidate-admin-portal.spec.js`](tests/candidate-admin-portal.spec.js).
+
+---
+
+### BUG-10: Search and Filter State Wipe on Browser Back Navigation
+* **Severity**: `Major (S2)` | **Priority**: `P1 (High)`
+* **Feature Affected**: Job Search, Department Filtering & History Routing
+* **Preconditions**: User searches for jobs on the portal.
+* **Steps to Reproduce**:
+  1. Filter jobs by keyword `"qa"` or department `"Quality Assurance"`.
+  2. Click "View Details" on a job card to open the role modal.
+  3. Click the browser's Back navigation button (`Alt + Left Arrow`).
+* **Expected Behavior**: Modal closes and returns to the Job Listings page with previous search input, department filter, and matched results fully preserved.
+* **Actual Behavior (Before Fix)**: Browser navigation reset the application state to default, wiping search query and resetting the department dropdown.
+* **Evidence & Resolution**: Integrated HTML5 History API (`history.pushState` / `popstate` listener) in `src/app.js` to preserve URL state and search parameters across navigation. Verified by Playwright Check 8 in [`tests/job-listings-ui-validation.spec.js`](tests/job-listings-ui-validation.spec.js).
 
 ---
 

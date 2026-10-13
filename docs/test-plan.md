@@ -3,7 +3,7 @@
 ## 1. Document Control & Overview
 * **Project**: CareerHub QA Portal — Job Application Workflow
 * **Assessment**: HireKiwi Senior QA Engineer Assessment
-* **Author**: Suhirdha K S
+* **Author**: Senior QA Engineer & Test Automation Lead
 * **Role**: Senior QA Engineer & Test Automation Architect
 * **Version**: 2.0.0 (Option C Final QA Readiness)
 * **Date**: October 13, 2026
