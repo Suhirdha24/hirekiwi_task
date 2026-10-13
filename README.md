@@ -328,14 +328,3 @@ NODE_ENV=development
 CLIENT_ORIGIN=*
 ADMIN_KEY=careerhub-admin-2026
 MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.lo94xku.mongodb.net/?appName=Cluster0
-```
-
----
-
-## ✍️ Authorship & Submission Details
-
-* **Candidate**: Suhirdha K S
-* **Repository**: [https://github.com/Suhirdha24/infinitica_task.git](https://github.com/Suhirdha24/infinitica_task.git)
-* **Assessment**: HireKiwi QA Engineer Assessment — Job Application Workflow
-* **Completion Date**: October 13, 2026
-* **Declaration**: All code, test suites, and documentation were authored specifically for this assessment.
