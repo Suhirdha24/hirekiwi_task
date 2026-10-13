@@ -1,6 +1,6 @@
 # Formal Defect Reports & Evidence Log
 
-This document provides structured, professional defect reports discovered during testing of the Job Application Workflow. Findings are categorized into **Part A: Actual Observed Defects on the External Public Portal (National Career Service — NCS)**, **Part B: Application Edge Scenarios & Mitigations on the Local Mock Portal (CareerHub)**, and **Part C: Code Defects Identified & Resolved during Option B Development**.
+This document provides structured, professional defect reports discovered during testing of the Job Application Workflow. Findings are categorized into **Part A: Actual Observed Defects on the External Reference Portal**, **Part B: Application Edge Scenarios & Mitigations on the Local Mock Portal (CareerHub)**, and **Part C: Code Defects Identified & Resolved during Option B Development**.
 
 ---
 

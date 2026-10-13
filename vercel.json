@@ -13,7 +13,6 @@
     }
   ],
   "env": {
-    "NODE_ENV": "production",
-    "ADMIN_KEY": "careerhub-admin-2026"
+    "NODE_ENV": "production"
   }
 }

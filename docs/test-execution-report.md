@@ -10,7 +10,7 @@
   * **Database**: MongoDB Atlas (`careerhub` database) with dual-mode in-memory sync
   * **Application Host**: `http://localhost:3000`
 * **Test Suites Executed**: 4 test files (Core Workflow, Option A Listings UI, Option B Form Validation, Candidate & Admin Portals)
-* **Final Pass Rate**: **100% (35 / 35 Tests Passed)**
+* **Final Pass Rate**: **100% (36 / 36 Tests Passed)**
 
 ---
 
@@ -18,8 +18,8 @@
 
 | Metric | Count | Percentage |
 | :--- | :---: | :---: |
-| **Total Automated Tests Executed** | **35** | **100.0%** |
-| **Passed Tests** | **35** | **100.0%** |
+| **Total Automated Tests Executed** | **36** | **100.0%** |
+| **Passed Tests** | **36** | **100.0%** |
 | **Failed Tests** | **0** | **0.0%** |
 | **Skipped Tests** | **0** | **0.0%** |
 | **Flaky Tests** | **0** | **0.0%** |
@@ -53,8 +53,8 @@
 
 ### Suite 2: Candidate Self-Service & Recruiter Admin Portal
 * **File**: [`tests/candidate-admin-portal.spec.js`](file:///c:/Users/Suhirdha%20K%20S/OneDrive/Pictures/Infinitica_assessment/tests/candidate-admin-portal.spec.js)
-* **Scenarios Executed**: 7
-* **Results**: 7 Passed, 0 Failed
+* **Scenarios Executed**: 8
+* **Results**: 8 Passed, 0 Failed
 
 | # | Scenario Title | Status | Duration |
 | :---: | :--- | :---: | :---: |
@@ -65,6 +65,7 @@
 | 17 | Scenario 5: Admin metrics overview accurately aggregates live application stage counts | ✅ Pass | 6.5s |
 | 18 | Scenario 6: Admin updates hiring stage to Shortlisted with live synchronization to Candidate Portal | ✅ Pass | 4.7s |
 | 19 | Scenario 7: Responsive adaptation across mobile (375x667) and tablet (768x1024) viewports | ✅ Pass | 2.7s |
+| 20 | Scenario 8: Security regression audit — unauthorized admin endpoints, candidate data privacy, and security headers | ✅ Pass | 2.5s |
 
 ---
 
@@ -75,13 +76,13 @@
 
 | # | Scenario Title | Status | Duration |
 | :---: | :--- | :---: | :---: |
-| 20 | TC-01/02/03: Verify job listings display correct metadata, search filtering, and role navigation | ✅ Pass | 2.0s |
-| 21 | TC-04: Verify successful job application submission flow with ticket generation | ✅ Pass | 2.7s |
-| 22 | TC-05/06/07: Form validation for missing required fields, invalid email format, and whitespace evasion | ✅ Pass | 3.6s |
-| 23 | TC-13: Verify accidental double-click / rapid submission prevention via button debouncing | ✅ Pass | 2.6s |
-| 24 | TC-14: Prevent duplicate application submission with identical email for same job | ✅ Pass | 5.0s |
-| 25 | TC-16: Controlled error handling under simulated HTTP 500 server error without form data loss | ✅ Pass | 3.6s |
-| 26 | TC-15: Controlled handling of high-latency network response with active loading indicator | ✅ Pass | 5.4s |
+| 21 | TC-01/02/03: Verify job listings display correct metadata, search filtering, and role navigation | ✅ Pass | 2.0s |
+| 22 | TC-04: Verify successful job application submission flow with ticket generation | ✅ Pass | 2.7s |
+| 23 | TC-05/06/07: Form validation for missing required fields, invalid email format, and whitespace evasion | ✅ Pass | 3.6s |
+| 24 | TC-13: Verify accidental double-click / rapid submission prevention via button debouncing | ✅ Pass | 2.6s |
+| 25 | TC-14: Prevent duplicate application submission with identical email for same job | ✅ Pass | 5.0s |
+| 26 | TC-16: Controlled error handling under simulated HTTP 500 server error without form data loss | ✅ Pass | 3.6s |
+| 27 | TC-15: Controlled handling of high-latency network response with active loading indicator | ✅ Pass | 5.4s |
 
 ---
 
@@ -92,15 +93,15 @@
 
 | # | Scenario Title | Status | Duration |
 | :---: | :--- | :---: | :---: |
-| 27 | Check 1: All four jobs render with title, department, salary, experience, location, and employment type | ✅ Pass | 1.6s |
-| 28 | Check 2: Search handles titles, skills, keywords, case-insensitivity, and whitespace trimming | ✅ Pass | 1.4s |
-| 29 | Check 3: Nonexistent search query displays empty state and offers filter reset | ✅ Pass | 1.4s |
-| 30 | Check 4: Department filtering displays correct subset and updates count | ✅ Pass | 1.3s |
-| 31 | Check 5: Combined search and department filters work in tandem | ✅ Pass | 1.2s |
-| 32 | Check 6: Clear-filters action restores full listing and hides clear button | ✅ Pass | 1.3s |
-| 33 | Check 7: Each job card opens the matching details modal with all required information | ✅ Pass | 3.3s |
-| 34 | Check 8: Browser back navigation returns from details to listing while preserving search | ✅ Pass | 1.6s |
-| 35 | Check 9: Responsive UI remains functional without horizontal overflow across viewports | ✅ Pass | 1.4s |
+| 28 | Check 1: All four jobs render with title, department, salary, experience, location, and employment type | ✅ Pass | 1.6s |
+| 29 | Check 2: Search handles titles, skills, keywords, case-insensitivity, and whitespace trimming | ✅ Pass | 1.4s |
+| 30 | Check 3: Nonexistent search query displays empty state and offers filter reset | ✅ Pass | 1.4s |
+| 31 | Check 4: Department filtering displays correct subset and updates count | ✅ Pass | 1.3s |
+| 32 | Check 5: Combined search and department filters work in tandem | ✅ Pass | 1.2s |
+| 33 | Check 6: Clear-filters action restores full listing and hides clear button | ✅ Pass | 1.3s |
+| 34 | Check 7: Each job card opens the matching details modal with all required information | ✅ Pass | 3.3s |
+| 35 | Check 8: Browser back navigation returns from details to listing while preserving search | ✅ Pass | 1.6s |
+| 36 | Check 9: Responsive UI remains functional without horizontal overflow across viewports | ✅ Pass | 1.4s |
 
 ---
 
@@ -127,4 +128,4 @@ All test artifacts generated during execution are stored locally:
 
 * **Open Regressions**: 0
 * **Known Blockers**: 0
-* **Assessment Readiness Verdict**: **READY FOR SUBMISSION & DEPLOYMENT (35 / 35 Passing Tests)**
+* **Assessment Readiness Verdict**: **READY FOR SUBMISSION & DEPLOYMENT (36 / 36 Passing Tests)**

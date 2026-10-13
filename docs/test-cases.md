@@ -1,6 +1,6 @@
 # Comprehensive Test Cases Specification: CareerHub QA Portal
 
-This document provides 20 detailed, structured test cases covering all 18 evaluation areas required for the HireKiwi QA Engineer assessment. Each test case includes exact preconditions, step-by-step reproduction instructions, test data, expected versus actual results, execution status, and evidence references.
+This document provides 26 detailed, structured test cases covering all evaluation areas required for the HireKiwi QA Engineer assessment. Each test case includes exact preconditions, step-by-step reproduction instructions, test data, expected versus actual results, execution status, and evidence references.
 
 ---
 
@@ -33,6 +33,7 @@ This document provides 20 detailed, structured test cases covering all 18 evalua
 | **TC-23** | Admin Authorization Guard | Verify administrative passkey guard and server-side 401 rejection on unauthorized access | **P0** | **Passed** | Yes | `tests/candidate-admin-portal.spec.js` (Scenario 4) |
 | **TC-24** | Admin Metrics Aggregation | Verify live metrics cards aggregate real database counts across all 5 recruitment stages | **P1** | **Passed** | Yes | `tests/candidate-admin-portal.spec.js` (Scenario 5) |
 | **TC-25** | Admin Stage Sync Workflow | Verify recruiter stage updates synchronize to database and update Candidate Portal | **P0** | **Passed** | Yes | `tests/candidate-admin-portal.spec.js` (Scenario 6) |
+| **TC-26** | Security Regression Audit | Verify administrative 401 guard, candidate isolation, security headers, and secrets sanitization | **P0** | **Passed** | Yes | `tests/candidate-admin-portal.spec.js` (Scenario 8) |
 
 ---
 
@@ -456,8 +457,8 @@ This document provides 20 detailed, structured test cases covering all 18 evalua
   1. Send direct `GET /api/admin/overview` without `X-Admin-Key`. Verify HTTP 401 response.
   2. Open Admin Portal in UI (`#nav-link-admin`).
   3. Enter incorrect passkey. Verify error alert is displayed.
-  4. Enter valid passkey (`careerhub-admin-2026`). Verify Admin Dashboard activates.
-* **Test Data**: Admin Key: `careerhub-admin-2026`.
+  4. Enter valid configured passkey (from environment variable `ADMIN_KEY`). Verify Admin Dashboard activates.
+* **Test Data**: Configured Admin Passkey (supplied via environment variable).
 * **Expected Result**: Unauthorized requests blocked with HTTP 401; valid key unlocks admin console.
 * **Actual Result**: Passed. Verified in `tests/candidate-admin-portal.spec.js` (Scenario 4).
 * **Execution Status**: `Passed`
@@ -498,3 +499,23 @@ This document provides 20 detailed, structured test cases covering all 18 evalua
 * **Actual Result**: Passed. Verified in `tests/candidate-admin-portal.spec.js` (Scenario 6).
 * **Execution Status**: `Passed`
 * **Evidence Reference**: Playwright Scenario 6.
+
+---
+
+### TC-26: Security Regression Audit & Infrastructure Protection
+* **Test Case ID**: `TC-26`
+* **Feature & Objective**: Security Architecture — Verify that administrative endpoints strictly reject unauthorized requests, candidate ownership prevents cross-candidate access, security headers (`X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`) are present, and server diagnostics never leak database credentials or secrets.
+* **Priority**: `P0 (Critical)`
+* **Preconditions**: Application server running with active security middleware.
+* **Test Steps**:
+  1. Send unauthorized requests to `GET /api/admin/applications` and `PATCH /api/admin/applications/:id/status`. Verify HTTP 401 response.
+  2. Query `GET /api/candidate/applications?email=invalid-syntax`. Verify HTTP 400 rejection.
+  3. Query candidate lookup for Candidate A vs Candidate B. Verify Candidate B receives 0 results for Candidate A's records.
+  4. Query `GET /api/health` and verify database passwords, MongoDB URI strings, and cluster credentials are never exposed.
+  5. Inspect response headers for `X-Content-Type-Options: nosniff` and `X-Frame-Options: DENY`.
+  6. Inspect `persistence` attribute to verify in-memory fallback status is explicitly reported.
+* **Test Data**: Admin Key: None / Invalid; Candidate Emails: `eleanor.vance@hillhouse.org`, `stranger@external.com`.
+* **Expected Result**: Unauthorized admin calls blocked with 401; candidate records strictly isolated; security headers enforced; credentials never leaked.
+* **Actual Result**: Passed. Verified in `tests/candidate-admin-portal.spec.js` (Scenario 8).
+* **Execution Status**: `Passed`
+* **Evidence Reference**: Playwright Scenario 8.

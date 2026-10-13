@@ -1,12 +1,12 @@
 # CareerHub — QA Test Portal & Automated Verification Suite
 
-[![Playwright Tests](https://img.shields.io/badge/Playwright-35%20Passing-brightgreen.svg)](https://playwright.dev/)
+[![Playwright Tests](https://img.shields.io/badge/Playwright-36%20Passing-brightgreen.svg)](https://playwright.dev/)
 [![Node.js Version](https://img.shields.io/badge/Node.js-v24.18.1-blue.svg)](https://nodejs.org/)
 [![Database](https://img.shields.io/badge/MongoDB%20Atlas-Integrated%20%2F%20In--Memory%20Fallback-success.svg)](https://www.mongodb.com/atlas)
 [![Accessibility](https://img.shields.io/badge/WCAG%202.1-AA%20Compliant-purple.svg)](https://www.w3.org/WAI/WCAG21/quickref/)
 [![License](https://img.shields.io/badge/License-ISC-lightgrey.svg)](LICENSE)
 
-> A modern, end-to-end recruitment web application and quality engineering test harness developed for the **HireKiwi QA Engineer Assessment**. Features a cohesive dark glassmorphic design system, multi-attribute job search and filtering, robust application submission validation, candidate self-service application tracking, a password-protected recruiter admin portal, dual-mode MongoDB Atlas integration, and a full 35-test Playwright automation suite with a 100% pass rate.
+> A modern, end-to-end recruitment web application and quality engineering test harness developed for the **HireKiwi QA Engineer Assessment**. Features a cohesive dark glassmorphic design system, multi-attribute job search and filtering, robust application submission validation, candidate self-service application tracking, a password-protected recruiter admin portal, dual-mode MongoDB Atlas integration, and a full 36-test Playwright automation suite with a 100% pass rate.
 
 ---
 
@@ -111,7 +111,7 @@ Candidates can search positions with instant filtering:
 
 ### 1. Access Control & Authorization
 * Accessed via **"Admin Portal"** button in navigation.
-* Enforces administrative passcode entry (default assessment key: `careerhub-admin-2026`).
+* Enforces administrative passkey entry configured securely via the `ADMIN_KEY` environment variable.
 * API endpoints reject unauthorized requests with `HTTP 401 Unauthorized` unless the valid `X-Admin-Key` header is present.
 
 ### 2. Pipeline Overview Cards
@@ -294,16 +294,16 @@ npm start
 ```
 Open **[http://localhost:3000](http://localhost:3000)** in your browser.
 
-### 4. Admin Portal Credentials
+### 4. Admin Portal Authentication
 * **Admin Email**: `admin@careerhub.internal`
-* **Admin Passkey**: `careerhub-admin-2026`
+* **Admin Passkey**: Configured via `ADMIN_KEY` in your `.env` file (e.g., `careerhub-admin-2026` or your chosen secure secret).
 
 ---
 
 ## 🧪 Running the Tests
 
 ```bash
-# Run all 35 tests in headless mode
+# Run all 36 tests in headless mode
 npm test
 
 # Run tests in visible browser window

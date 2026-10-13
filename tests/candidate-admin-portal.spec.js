@@ -1,6 +1,7 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
 const { JobPortalPage } = require('./pages/JobPortalPage');
+const ADMIN_KEY = process.env.ADMIN_KEY || 'careerhub-admin-2026';
 
 test.describe('CareerHub — Candidate Self-Service & Recruiter Admin Portal', () => {
   let portal;
@@ -115,7 +116,7 @@ test.describe('CareerHub — Candidate Self-Service & Recruiter Admin Portal', (
     await expect(portal.adminDashboardView).toBeHidden();
 
     // 4. Submit valid admin key
-    await portal.adminPasskey.fill('careerhub-admin-2026');
+    await portal.adminPasskey.fill(ADMIN_KEY);
     await portal.btnAdminLogin.click();
 
     // Dashboard view should activate
@@ -158,7 +159,7 @@ test.describe('CareerHub — Candidate Self-Service & Recruiter Admin Portal', (
 
     // 2. Open Admin Portal and authenticate
     await portal.navLinkAdmin.click();
-    await portal.adminPasskey.fill('careerhub-admin-2026');
+    await portal.adminPasskey.fill(ADMIN_KEY);
     await portal.btnAdminLogin.click();
 
     // 3. Verify overview metrics
@@ -192,7 +193,7 @@ test.describe('CareerHub — Candidate Self-Service & Recruiter Admin Portal', (
 
     // 2. Admin logs in and updates stage
     await portal.navLinkAdmin.click();
-    await portal.adminPasskey.fill('careerhub-admin-2026');
+    await portal.adminPasskey.fill(ADMIN_KEY);
     await portal.btnAdminLogin.click();
     await expect(portal.adminDashboardView).toBeVisible();
 
@@ -256,4 +257,74 @@ test.describe('CareerHub — Candidate Self-Service & Recruiter Admin Portal', (
     await portal.btnCloseAdmin.click();
     await expect(portal.adminModal).toBeHidden();
   });
+
+  test('Scenario 8: Security regression audit — unauthorized admin endpoints, candidate data privacy, and security headers', async ({ page, request }) => {
+    // 1. Verify GET /api/admin/applications rejects unauthorized requests with HTTP 401
+    const unauthAppsRes = await request.get('/api/admin/applications');
+    expect(unauthAppsRes.status()).toBe(401);
+    const unauthAppsBody = await unauthAppsRes.json();
+    expect(unauthAppsBody.error).toContain('Unauthorized');
+
+    // 2. Verify PATCH /api/admin/applications/:id/status rejects unauthorized requests with HTTP 401
+    const unauthPatchRes = await request.patch('/api/admin/applications/APP-123456/status', {
+      data: { status: 'Shortlisted' }
+    });
+    expect(unauthPatchRes.status()).toBe(401);
+
+    // 3. Verify candidate lookup rejects invalid email syntax with HTTP 400
+    const invalidEmailRes = await request.get('/api/candidate/applications?email=invalid-syntax-email');
+    expect(invalidEmailRes.status()).toBe(400);
+    const invalidEmailBody = await invalidEmailRes.json();
+    expect(invalidEmailBody.error).toContain('Valid candidate email format required');
+
+    // 4. Submit a test application with private fields (phone, cover letter)
+    await portal.openApplicationForJob('JOB-101');
+    await portal.fillApplicationForm({
+      name: 'Eleanor Vance',
+      email: 'eleanor.vance@hillhouse.org',
+      phone: '9876543210',
+      experience: '3',
+      coverLetter: 'Confidential candidate cover letter notes.'
+    });
+    await portal.submitForm();
+    await expect(portal.successModal).toBeVisible();
+    await portal.btnCloseSuccess.click();
+
+    // 5. Verify candidate lookup strictly enforces candidate ownership and isolation
+    const candidateLookup = await request.get('/api/candidate/applications?email=eleanor.vance@hillhouse.org');
+    expect(candidateLookup.status()).toBe(200);
+    const candData = await candidateLookup.json();
+    expect(candData.count).toBe(1);
+    expect(candData.applications[0].email).toBe('eleanor.vance@hillhouse.org');
+    expect(candData.applications[0].fullName).toBe('Eleanor Vance');
+
+    // Cross-candidate isolation: another candidate email cannot access Eleanor's applications
+    const strangerLookup = await request.get('/api/candidate/applications?email=stranger@external.com');
+    expect(strangerLookup.status()).toBe(200);
+    const strangerData = await strangerLookup.json();
+    expect(strangerData.count).toBe(0);
+    expect(strangerData.applications.length).toBe(0);
+
+    // 6. Verify security headers (X-Content-Type-Options: nosniff, X-Frame-Options: DENY)
+    const publicAuditRes = await request.get('/api/submissions');
+    expect(publicAuditRes.status()).toBe(200);
+    const headers = publicAuditRes.headers();
+    expect(headers['x-content-type-options']).toBe('nosniff');
+    expect(headers['x-frame-options']).toBe('DENY');
+    expect(headers['referrer-policy']).toBe('strict-origin-when-cross-origin');
+
+    // 7. Verify /api/health never exposes database credentials, password hashes, or raw connection strings
+    const healthRes = await request.get('/api/health');
+    const healthJson = await healthRes.json();
+    const healthText = JSON.stringify(healthJson);
+    expect(healthText).not.toContain('password');
+    expect(healthText).not.toContain('mongodb+srv');
+    expect(healthJson.database.mode).toBe('in-memory-fallback');
+
+    // 8. Verify explicit in-memory fallback reporting in submissions response
+    const auditData = await publicAuditRes.json();
+    expect(auditData.persistence).toBeDefined();
+    expect(['mongodb-atlas', 'in-memory-fallback']).toContain(auditData.persistence);
+  });
 });
+

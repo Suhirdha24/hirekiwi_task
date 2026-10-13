@@ -11,6 +11,6 @@ services:
       - key: PORT
         value: 10000
       - key: ADMIN_KEY
-        value: careerhub-admin-2026
+        generateValue: true
       - key: CLIENT_ORIGIN
         value: "*"

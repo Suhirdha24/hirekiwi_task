@@ -242,8 +242,22 @@ const server = http.createServer((req, res) => {
   const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost:3000'}`);
   const pathname = parsedUrl.pathname;
 
-  // Enable CORS & JSON headers
-  res.setHeader('Access-Control-Allow-Origin', CLIENT_ORIGIN);
+  // Security Headers & CORS configuration
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+
+  const requestOrigin = req.headers.origin;
+  if (CLIENT_ORIGIN === '*') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  } else {
+    const trustedOrigins = CLIENT_ORIGIN.split(',').map(o => o.trim());
+    if (requestOrigin && trustedOrigins.includes(requestOrigin)) {
+      res.setHeader('Access-Control-Allow-Origin', requestOrigin);
+    } else if (!requestOrigin) {
+      res.setHeader('Access-Control-Allow-Origin', trustedOrigins[0] || 'http://localhost:3000');
+    }
+  }
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Simulate-Error, X-Simulate-Delay, X-Admin-Key');
 
@@ -465,6 +479,8 @@ const server = http.createServer((req, res) => {
               success: true,
               message: 'Application submitted successfully!',
               applicationId,
+              persistence: isMongoConnected ? 'mongodb-atlas' : 'in-memory-fallback',
+              durable: isMongoConnected,
               submission: submissionRecord
             }));
           };
@@ -491,12 +507,34 @@ const server = http.createServer((req, res) => {
         res.end(JSON.stringify({ error: 'Candidate email query parameter is required.' }));
         return;
       }
-      const candidateApps = submissions.filter(s => (s.email || '').toLowerCase() === emailQuery);
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+      if (!emailRegex.test(emailQuery)) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Valid candidate email format required.' }));
+        return;
+      }
+
+      const candidateApps = submissions
+        .filter(s => (s.email || '').toLowerCase() === emailQuery)
+        .map(s => ({
+          applicationId: s.applicationId,
+          jobId: s.jobId,
+          jobTitle: s.jobTitle,
+          fullName: s.fullName,
+          email: s.email,
+          experience: s.experience,
+          status: s.status,
+          submittedAt: s.submittedAt
+        }));
+
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
         email: emailQuery,
         count: candidateApps.length,
-        applications: candidateApps
+        applications: candidateApps,
+        persistence: isMongoConnected ? 'mongodb-atlas' : 'in-memory-fallback',
+        durable: isMongoConnected
       }));
       return;
     }
@@ -621,13 +659,23 @@ const server = http.createServer((req, res) => {
       res.end(JSON.stringify({
         count: submissions.length,
         submissions,
+        persistence: isMongoConnected ? 'mongodb-atlas' : 'in-memory-fallback',
+        durable: isMongoConnected,
         database: isMongoConnected ? 'MongoDB Atlas' : 'In-Memory Local'
       }));
       return;
     }
 
-    // 5. POST /api/reset — Reset test submissions & simulation toggles
+    // 5. POST /api/reset — Reset test submissions & simulation toggles (affecting designated test data only)
     if (pathname === '/api/reset' && req.method === 'POST') {
+      if (NODE_ENV === 'production') {
+        const adminKey = req.headers['x-admin-key'] || parsedUrl.searchParams.get('key');
+        if (!adminKey || adminKey !== ADMIN_KEY) {
+          res.writeHead(401, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Unauthorized: Admin authentication required to reset test data in production environment.' }));
+          return;
+        }
+      }
       submissions = [];
       serverSimulation = { simulate500: false, simulateDelayMs: 0 };
       if (isMongoConnected && applicationsCollection) {
@@ -638,7 +686,8 @@ const server = http.createServer((req, res) => {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
         success: true,
-        message: 'Test submissions store and simulation states reset.'
+        message: 'Test submissions store and simulation states reset.',
+        affectedEntity: 'test_submissions_only'
       }));
       return;
     }
