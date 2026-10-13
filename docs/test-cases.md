@@ -28,6 +28,11 @@ This document provides 20 detailed, structured test cases covering all 18 evalua
 | **TC-18** | Responsive Layout & a11y | Verify responsive layout across viewports (375px, 768px, 1280px) and visible focus rings | **P2** | **Passed** | Yes | `tests/job-listings-ui-validation.spec.js` (Check 9) |
 | **TC-19** | Resume File Validation | Verify rejection of disallowed file extensions (.txt, .exe) and enforcement of 5MB limit | **P1** | **Passed** | Yes | `tests/application-form-validation.spec.js` (Scenario 5) |
 | **TC-20** | QA Harness Reset State | Verify "Reset Applications" resets data store without blocking browser alerts | **P2** | **Passed** | Yes | `src/app.js` (`resetSubmissions`) & Scenario 10 |
+| **TC-21** | Candidate Portal Tracking | Verify candidate email lookup renders live submission records and hiring stage badges | **P0** | **Passed** | Yes | `tests/candidate-admin-portal.spec.js` (Scenario 3) |
+| **TC-22** | Candidate Privacy Isolation | Verify cross-candidate privacy and ownership checks prevent foreign record exposure | **P0** | **Passed** | Yes | `tests/candidate-admin-portal.spec.js` (Scenario 3) |
+| **TC-23** | Admin Authorization Guard | Verify administrative passkey guard and server-side 401 rejection on unauthorized access | **P0** | **Passed** | Yes | `tests/candidate-admin-portal.spec.js` (Scenario 4) |
+| **TC-24** | Admin Metrics Aggregation | Verify live metrics cards aggregate real database counts across all 5 recruitment stages | **P1** | **Passed** | Yes | `tests/candidate-admin-portal.spec.js` (Scenario 5) |
+| **TC-25** | Admin Stage Sync Workflow | Verify recruiter stage updates synchronize to database and update Candidate Portal | **P0** | **Passed** | Yes | `tests/candidate-admin-portal.spec.js` (Scenario 6) |
 
 ---
 
@@ -403,3 +408,93 @@ This document provides 20 detailed, structured test cases covering all 18 evalua
 * **Actual Result**: Passed. Verified in Option B Scenario 10 and `src/app.js`.
 * **Execution Status**: `Passed`
 * **Evidence Reference**: `src/app.js` (`resetSubmissions`).
+
+---
+
+### TC-21: Candidate Self-Service Dashboard Application Tracking
+* **Test Case ID**: `TC-21`
+* **Feature & Objective**: Candidate Dashboard — Verify that candidate can look up their own application records using their registered email and view tracking ID, department, date, and live status badge.
+* **Priority**: `P0 (Critical)`
+* **Preconditions**: Candidate has submitted an application.
+* **Test Steps**:
+  1. Click "My Applications" button in navigation (`#nav-link-candidate`).
+  2. Enter applicant email into `#candidate-email-input`.
+  3. Click `#btn-lookup-candidate`.
+  4. Verify application card renders with matching tracking code, role name, department, and live stage badge.
+* **Test Data**: Email: `sarah.connor@resistance.net`.
+* **Expected Result**: Application records render with matching tracking ID and live status badge (`New`).
+* **Actual Result**: Passed. Verified in `tests/candidate-admin-portal.spec.js` (Scenario 3).
+* **Execution Status**: `Passed`
+* **Evidence Reference**: Playwright Scenario 3.
+
+---
+
+### TC-22: Candidate Application Ownership & Isolation
+* **Test Case ID**: `TC-22`
+* **Feature & Objective**: Security & Privacy — Verify that candidate lookup strictly isolates application records and does not expose other candidates' data.
+* **Priority**: `P0 (Critical)`
+* **Preconditions**: Multiple applications from different candidates exist.
+* **Test Steps**:
+  1. Open Candidate Portal (`#candidate-modal`).
+  2. Enter an unassociated email address (`stranger@example.com`).
+  3. Click `#btn-lookup-candidate`.
+  4. Verify empty state `#candidate-empty-state` is displayed and zero foreign applications are returned.
+* **Test Data**: Email: `stranger@example.com`.
+* **Expected Result**: Empty state displayed; foreign candidates' records are never exposed.
+* **Actual Result**: Passed. Verified in `tests/candidate-admin-portal.spec.js` (Scenario 3).
+* **Execution Status**: `Passed`
+* **Evidence Reference**: Playwright Scenario 3.
+
+---
+
+### TC-23: Recruiter Admin Portal Authentication Guard
+* **Test Case ID**: `TC-23`
+* **Feature & Objective**: Administrative Access Control — Verify that unauthenticated requests are rejected and valid admin passkey grants access to recruitment dashboard.
+* **Priority**: `P0 (Critical)`
+* **Preconditions**: Application server is running.
+* **Test Steps**:
+  1. Send direct `GET /api/admin/overview` without `X-Admin-Key`. Verify HTTP 401 response.
+  2. Open Admin Portal in UI (`#nav-link-admin`).
+  3. Enter incorrect passkey. Verify error alert is displayed.
+  4. Enter valid passkey (`careerhub-admin-2026`). Verify Admin Dashboard activates.
+* **Test Data**: Admin Key: `careerhub-admin-2026`.
+* **Expected Result**: Unauthorized requests blocked with HTTP 401; valid key unlocks admin console.
+* **Actual Result**: Passed. Verified in `tests/candidate-admin-portal.spec.js` (Scenario 4).
+* **Execution Status**: `Passed`
+* **Evidence Reference**: Playwright Scenario 4.
+
+---
+
+### TC-24: Recruiter Admin Live Overview Metrics Aggregation
+* **Test Case ID**: `TC-24`
+* **Feature & Objective**: Admin Metrics — Verify that summary metrics cards accurately aggregate real application counts across Total, New, Under Review, Shortlisted, and Rejected stages.
+* **Priority**: `P1 (High)`
+* **Preconditions**: Applications exist in the system across multiple stages.
+* **Test Steps**:
+  1. Authenticate as admin in `#admin-modal`.
+  2. Inspect metrics cards: `#admin-metric-total`, `#admin-metric-new`, `#admin-metric-review`, `#admin-metric-shortlist`, `#admin-metric-rejected`.
+  3. Verify counts match the exact number of active application records in the database.
+* **Test Data**: Active submissions in session store.
+* **Expected Result**: All metrics numbers match live database records without discrepancy.
+* **Actual Result**: Passed. Verified in `tests/candidate-admin-portal.spec.js` (Scenario 5).
+* **Execution Status**: `Passed`
+* **Evidence Reference**: Playwright Scenario 5.
+
+---
+
+### TC-25: Recruiter Stage Update & Real-Time Sync to Candidate Portal
+* **Test Case ID**: `TC-25`
+* **Feature & Objective**: End-to-End Pipeline Workflow — Verify that updating a candidate's stage in the Admin table updates the backend and immediately synchronizes to the Candidate Portal.
+* **Priority**: `P0 (Critical)`
+* **Preconditions**: Candidate application exists in `New` state.
+* **Test Steps**:
+  1. In Admin console table, find candidate row.
+  2. Select `"Shortlisted"` from the stage dropdown.
+  3. Verify table row badge updates to `"Shortlisted"` and admin metrics refresh.
+  4. Switch to Candidate Dashboard and look up candidate's email.
+  5. Verify candidate's status badge reflects `"Shortlisted"`.
+* **Test Data**: Target Application ID: `APP-XXXXXX`, New Status: `Shortlisted`.
+* **Expected Result**: Status updates persistently; Candidate Dashboard reflects the updated stage in real time.
+* **Actual Result**: Passed. Verified in `tests/candidate-admin-portal.spec.js` (Scenario 6).
+* **Execution Status**: `Passed`
+* **Evidence Reference**: Playwright Scenario 6.

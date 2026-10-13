@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: careerhub-qa-portal
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: ADMIN_KEY
+        value: careerhub-admin-2026
+      - key: CLIENT_ORIGIN
+        value: "*"
