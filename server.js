@@ -140,7 +140,8 @@ function extractHostSafely(uri) {
     const parsed = new URL(uri);
     return parsed.hostname;
   } catch {
-    return 'cluster0.lo94xku.mongodb.net';
+    const match = uri.match(/@([^/?#]+)/);
+    return match ? match[1] : 'atlas-cluster.internal';
   }
 }
 
@@ -270,7 +271,7 @@ const server = http.createServer((req, res) => {
         database: {
           connected: isMongoConnected,
           provider: 'mongodb',
-          cluster: mongoClusterHost || 'cluster0.lo94xku.mongodb.net',
+          cluster: mongoClusterHost || (isMongoConnected ? 'mongodb-atlas' : 'in-memory'),
           database: 'careerhub',
           pingAcknowledged: mongoPingAcknowledged,
           mode: isMongoConnected ? 'mongodb-atlas' : 'in-memory-fallback',

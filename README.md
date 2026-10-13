@@ -326,5 +326,6 @@ Copy `.env.example` to `.env` to customize settings:
 PORT=3000
 NODE_ENV=development
 CLIENT_ORIGIN=*
-ADMIN_KEY=careerhub-admin-2026
-MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.lo94xku.mongodb.net/?appName=Cluster0
+ADMIN_KEY=your_secure_admin_passkey_here
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster-name>.mongodb.net/careerhub?retryWrites=true&w=majority&appName=Cluster0
+```

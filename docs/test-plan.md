@@ -16,10 +16,10 @@
 The primary objective of this Master Test Plan is to establish a rigorous, risk-driven Quality Assurance strategy for the complete end-to-end Job Application Workflow in the CareerHub QA Portal. The portal enables job seekers to discover openings, filter and search by department/skills, inspect detailed job requirements, and submit applications with real-time validation, concurrency protection, and error resilience.
 
 ### Dual-Environment Testing Strategy:
-1. **Safe Exploratory Testing (Real External Portal — National Career Service / NCS)**:
-   - **Target**: `https://www.ncs.gov.in`
+1. **Safe Exploratory Testing (External Reference Hiring Portal)**:
+   - **Target**: `[External Reference Portal]` (Reference Benchmark)
    - **Purpose**: Real-world baseline analysis of UI patterns, accessibility tags, DOM hierarchies, and navigation ergonomics.
-   - **Safety Boundary**: Strictly non-destructive read-only exploration. No fake candidate submissions, no automated fuzzing, and no data tampering on live government servers.
+   - **Safety Boundary**: Strictly non-destructive read-only exploration. No fake candidate submissions, no automated fuzzing, and zero data tampering on external production servers.
 2. **Local Mock Application Verification (CareerHub Portal)**:
    - **Target**: `http://localhost:3000` (backed by Node.js server and MongoDB Atlas cluster).
    - **Purpose**: Full-scope automated and manual testing of all positive, negative, boundary, debouncing, duplicate prevention, and simulated error scenarios (Network Delay, HTTP 500, Offline Drop).

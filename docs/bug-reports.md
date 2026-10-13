@@ -23,15 +23,15 @@ This document provides structured, professional defect reports discovered during
 
 ---
 
-## Part A: Actual Observed Defects (Real Production Portal — NCS)
+## Part A: Actual Observed Defects (External Reference Hiring Portal)
 
 ### BUG-01: Typo in Core Header Navigation CSS Class (`.joobseeker-dropdown`)
 * **Bug ID**: `BUG-01`
 * **Short Title**: Header dropdown CSS class typo `.joobseeker-dropdown`
 * **Feature Affected**: Navigation & Global Header Stylesheet
-* **Preconditions**: Public network access to `https://www.ncs.gov.in`.
+* **Preconditions**: Public network access to the external reference job portal.
 * **Reproduction Steps**:
-  1. Navigate to `https://www.ncs.gov.in`.
+  1. Navigate to the external reference job portal.
   2. Open Browser DevTools (F12) -> Elements / Sources panel.
   3. Search stylesheet references for class definitions in `.main-ncs-header-div`.
   4. Inspect the dropdown container style definition.
@@ -39,10 +39,10 @@ This document provides structured, professional defect reports discovered during
 * **Actual Behavior**: Class name is misspelled as `.joobseeker-dropdown` in production styles.
 * **Severity**: `S4 (Trivial)`
 * **Priority**: `P2 (Medium)`
-* **Environment**: Chromium 156.0.8078.4 / Windows 11 / `https://www.ncs.gov.in`
+* **Environment**: Chromium 156.0.8078.4 / Windows 11 / Reference Portal
 * **Evidence**:
   ```css
-  /* Found in https://www.ncs.gov.in styles */
+  /* Found in external portal styles */
   .ncs-nav-bar[_ngcontent-ng-c3049235200] .joobseeker-dropdown[_ngcontent-ng-c3049235200] {
     margin-top: 12px;
   }
@@ -55,9 +55,9 @@ This document provides structured, professional defect reports discovered during
 * **Bug ID**: `BUG-02`
 * **Short Title**: Filter and query parameters wiped on browser Back navigation
 * **Feature Affected**: Job Search, Department Filtering & History Routing
-* **Preconditions**: Candidate is browsing jobs on `https://www.ncs.gov.in`.
+* **Preconditions**: Candidate is browsing jobs on the external reference job portal.
 * **Reproduction Steps**:
-  1. Navigate to Job Search section on `https://www.ncs.gov.in`.
+  1. Navigate to Job Search section on the external reference job portal.
   2. Select sector filter (e.g. "Information Technology") and enter a keyword.
   3. Click on a specific role from the results to open the role details page.
   4. Click the browser's "Back" navigation button (`Alt + Left Arrow`).
@@ -65,7 +65,7 @@ This document provides structured, professional defect reports discovered during
 * **Actual Behavior**: Filter state resets to empty/default; search input is completely wiped.
 * **Severity**: `S2 (Major)`
 * **Priority**: `P1 (High)`
-* **Environment**: Chromium 156.0.8078.4 / Windows 11 / `https://www.ncs.gov.in`
+* **Environment**: Chromium 156.0.8078.4 / Windows 11 / Reference Portal
 * **Evidence**: URL lacks query parameters (`?sector=IT&q=...`); state loss confirmed upon history navigation.
 * **Status**: `Open (External Third-Party Production System; Resolved in CareerHub via History API)`
 
@@ -75,7 +75,7 @@ This document provides structured, professional defect reports discovered during
 * **Bug ID**: `BUG-03`
 * **Short Title**: Icon-only search buttons lack `aria-label` accessibility attributes
 * **Feature Affected**: Global Search Bar Accessibility (WCAG 2.1 AA)
-* **Preconditions**: Portal loaded on `https://www.ncs.gov.in`.
+* **Preconditions**: Portal loaded on the external reference job portal.
 * **Reproduction Steps**:
   1. Inspect `.header-search-btn` and mobile navigation icon buttons in header.
   2. Run Lighthouse / Axe Accessibility audit.

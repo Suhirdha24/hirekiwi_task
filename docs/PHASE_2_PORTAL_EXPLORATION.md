@@ -1,8 +1,8 @@
-# Phase 2: Live Portal Exploration & Defect Log
+# Phase 2: Reference Portal Exploration & Defect Log
 
 ## 1. Exploration Metadata
-* **Portal Name**: National Career Service (NCS) Portal
-* **Target URL**: `https://www.ncs.gov.in`
+* **Portal Name**: External Reference Career Portal (Benchmark)
+* **Target URL**: `[External Reference Portal - Sanitized]`
 * **Inspection Date**: 2026-10-13
 * **Environment / Engine**: Chromium (Chrome 156.0.8078.4 / Playwright Engine v1.64.0 / HTTP DOM Inspector)
 * **Auditor Role**: QA Engineer Assessment
