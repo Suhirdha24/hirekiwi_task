@@ -74,12 +74,12 @@
         <!-- Search & Filter Bar -->
         <div class="search-filter-card" role="search">
           <div class="search-input-group">
-            <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
-            <input type="text" id="search-input" placeholder="Search by job title, skill (e.g. Playwright, QA), or keyword..." autocomplete="off">
-            <button type="button" class="clear-search-btn" id="btn-clear-search" style="display:none;" aria-label="Clear search">✕</button>
+            <input type="text" id="search-input" placeholder="Search by job title, skill (e.g. Playwright), or keyword..." autocomplete="off" aria-label="Search job listings">
+            <button type="button" class="clear-search-btn" id="btn-clear-search" style="display:none;" aria-label="Clear search input">✕</button>
           </div>
 
           <div class="filter-dropdown-group">
@@ -90,18 +90,25 @@
               <option value="Infrastructure">Infrastructure</option>
             </select>
           </div>
+
+          <button type="button" class="btn-clear-filters-header" id="btn-clear-filters-header" style="display:none;" aria-label="Clear all active filters">
+            Clear Filters
+          </button>
         </div>
       </div>
     </section>
 
     <!-- Job Listings Grid Section -->
-    <section class="jobs-section" id="jobs-section">
+    <section class="jobs-section" id="jobs-section" aria-labelledby="jobs-heading">
       <div class="section-header">
         <div>
-          <h2 class="section-title">Available Positions</h2>
+          <div class="section-title-wrap">
+            <h2 class="section-title" id="jobs-heading">Available Positions</h2>
+            <span class="demo-data-badge" title="Demonstration data for HireKiwi assessment">Demo Data</span>
+          </div>
           <p class="section-subtitle">Showing active verified openings matching your filters</p>
         </div>
-        <div class="results-count" id="jobs-results-count">Loading roles...</div>
+        <div class="results-count" id="jobs-results-count" aria-live="polite">Loading roles...</div>
       </div>
 
       <div class="jobs-grid" id="jobs-grid">
@@ -109,11 +116,11 @@
       </div>
 
       <!-- Empty State -->
-      <div class="empty-state" id="jobs-empty-state" style="display: none;">
+      <div class="empty-state" id="jobs-empty-state" style="display: none;" role="status">
         <div class="empty-icon">🔍</div>
         <h3>No matching roles found</h3>
-        <p>Try tweaking your keyword search or selecting "All Departments".</p>
-        <button type="button" class="btn-primary" id="btn-reset-filters">Reset All Filters</button>
+        <p id="empty-state-message">We couldn't find any job openings matching your current search or department filter.</p>
+        <button type="button" class="btn-primary" id="btn-reset-filters">Clear All Filters</button>
       </div>
     </section>
 
@@ -170,7 +177,10 @@
     <div class="modal-card modal-lg">
       <div class="modal-header">
         <div>
-          <span class="chip-badge" id="modal-job-dept">Department</span>
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+            <span class="chip-badge" id="modal-job-dept">Department</span>
+            <span class="posted-time" id="modal-job-posted">Posted</span>
+          </div>
           <h2 class="modal-title" id="modal-job-title">Job Title</h2>
           <div class="modal-meta" id="modal-job-meta">Location • Full-time</div>
         </div>
@@ -188,8 +198,12 @@
             <span class="metric-value" id="modal-job-experience">0 yrs</span>
           </div>
           <div class="metric-box">
-            <span class="metric-label">Posted Date</span>
-            <span class="metric-value" id="modal-job-posted">Recently</span>
+            <span class="metric-label">Employment Type</span>
+            <span class="metric-value" id="modal-job-type">Full-time</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-label">Location</span>
+            <span class="metric-value" id="modal-job-location">Remote / Hybrid</span>
           </div>
         </div>
 

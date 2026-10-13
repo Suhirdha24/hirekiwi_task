@@ -180,20 +180,32 @@ The test suite validates 20 comprehensively documented scenarios:
 
 ## 📈 Automated Test Execution Results
 
-The final test suite was executed against `http://localhost:3000` via clean Playwright runners:
+The full test suite containing both the core QA workflow scenarios and Option A UI functional validation checks was executed against `http://localhost:3000` via clean Playwright runners:
 
 ```text
-Running 7 tests using 1 worker
+Running 16 tests using 1 worker
 
-  ✓ TC-01/02/03: Verify job listings display correct metadata, search filtering, and navigation to role details (1.8s)
-  ✓ TC-04: Verify successful job application submission flow with ticket generation (2.6s)
-  ✓ TC-05/06/07: Form validation for missing required fields, invalid email format, and whitespace evasion (3.4s)
-  ✓ TC-13: Verify accidental double-click / rapid submission prevention via button debouncing (2.8s)
-  ✓ TC-14: Prevent duplicate application submission with identical email for same job (4.6s)
-  ✓ TC-16: Controlled error handling under simulated HTTP 500 server error without form data loss (2.8s)
-  ✓ TC-15: Controlled handling of high-latency network response with active loading indicator (5.5s)
+  ✓ tests/job-application-workflow.spec.js (7 tests)
+    ✓ TC-01/02/03: Verify job listings display correct metadata, search filtering, and navigation to role details (3.6s)
+    ✓ TC-04: Verify successful job application submission flow with ticket generation (2.5s)
+    ✓ TC-05/06/07: Form validation for missing required fields, invalid email format, and whitespace evasion (3.2s)
+    ✓ TC-13: Verify accidental double-click / rapid submission prevention via button debouncing (2.4s)
+    ✓ TC-14: Prevent duplicate application submission with identical email for same job (4.6s)
+    ✓ TC-16: Controlled error handling under simulated HTTP 500 server error without form data loss (2.5s)
+    ✓ TC-15: Controlled handling of high-latency network response with active loading indicator (5.3s)
 
-  7 passed (24.7s)
+  ✓ tests/job-listings-ui-validation.spec.js (Option A UI Enhancements - 9 tests)
+    ✓ Check 1: All four jobs render with title, department, salary, experience, location, and employment type (1.6s)
+    ✓ Check 2: Search handles titles, skills, keywords, case-insensitivity, and whitespace trimming (1.7s)
+    ✓ Check 3: Nonexistent search query displays empty state and offers filter reset (1.3s)
+    ✓ Check 4: Department filtering displays correct subset and updates count (1.2s)
+    ✓ Check 5: Combined search and department filters work in tandem (1.1s)
+    ✓ Check 6: Clear-filters action restores full listing and hides clear button (2.5s)
+    ✓ Check 7: Each job card opens the matching details modal with all required information (3.0s)
+    ✓ Check 8: Browser back navigation returns from details to listing while preserving search (3.2s)
+    ✓ Check 9: Responsive UI remains functional without horizontal overflow across viewports (1.2s)
+
+  16 passed (42.3s)
   Pass Rate: 100%
 ```
 

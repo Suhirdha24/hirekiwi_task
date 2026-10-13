@@ -23,9 +23,11 @@
   const searchInput = document.getElementById('search-input');
   const btnClearSearch = document.getElementById('btn-clear-search');
   const filterDepartment = document.getElementById('filter-department');
+  const btnClearFiltersHeader = document.getElementById('btn-clear-filters-header');
   const jobsGrid = document.getElementById('jobs-grid');
   const jobsResultsCount = document.getElementById('jobs-results-count');
   const jobsEmptyState = document.getElementById('jobs-empty-state');
+  const emptyStateMessage = document.getElementById('empty-state-message');
   const btnResetFilters = document.getElementById('btn-reset-filters');
 
   // DOM Elements - Job Details Modal
@@ -35,6 +37,8 @@
   const modalJobMeta = document.getElementById('modal-job-meta');
   const modalJobSalary = document.getElementById('modal-job-salary');
   const modalJobExperience = document.getElementById('modal-job-experience');
+  const modalJobType = document.getElementById('modal-job-type');
+  const modalJobLocation = document.getElementById('modal-job-location');
   const modalJobPosted = document.getElementById('modal-job-posted');
   const modalJobDescription = document.getElementById('modal-job-description');
   const modalJobResponsibilities = document.getElementById('modal-job-responsibilities');
@@ -90,6 +94,15 @@
     setupEventListeners();
     await fetchJobs();
     await fetchSubmissions();
+
+    // Check if initial URL has deep-link to a job (e.g. #job=JOB-101)
+    if (window.location.hash.startsWith('#job=')) {
+      const jobId = window.location.hash.replace('#job=', '').trim();
+      const targetJob = allJobs.find(j => j.id === jobId);
+      if (targetJob) {
+        openJobDetailsModal(targetJob, false);
+      }
+    }
   }
 
   // Event Listeners Setup
@@ -108,13 +121,23 @@
 
     filterDepartment.addEventListener('change', applyFilters);
     btnResetFilters.addEventListener('click', resetFilters);
+    if (btnClearFiltersHeader) {
+      btnClearFiltersHeader.addEventListener('click', resetFilters);
+    }
 
     // Job Details Modal
-    btnCloseDetails.addEventListener('click', closeDetailsModal);
-    btnCancelDetails.addEventListener('click', closeDetailsModal);
+    btnCloseDetails.addEventListener('click', () => closeDetailsModal(true));
+    btnCancelDetails.addEventListener('click', () => closeDetailsModal(true));
     btnOpenApply.addEventListener('click', () => {
-      closeDetailsModal();
+      closeDetailsModal(false);
       openApplicationModal(currentJob);
+    });
+
+    // Browser Back / Popstate Navigation Support
+    window.addEventListener('popstate', () => {
+      if (jobDetailsModal && jobDetailsModal.style.display !== 'none') {
+        closeDetailsModal(false);
+      }
     });
 
     // Application Modal
@@ -126,7 +149,7 @@
     // Modals Backdrop Close & Escape Key
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        closeDetailsModal();
+        closeDetailsModal(true);
         closeApplicationModal();
         closeSuccessModal();
         closeDuplicateModal();
@@ -136,7 +159,15 @@
     [jobDetailsModal, applicationModal, successModal, duplicateModal].forEach(modal => {
       modal.addEventListener('click', (e) => {
         if (e.target === modal) {
-          modal.style.display = 'none';
+          if (modal === jobDetailsModal) {
+            closeDetailsModal(true);
+          } else if (modal === applicationModal) {
+            closeApplicationModal();
+          } else if (modal === successModal) {
+            closeSuccessModal();
+          } else if (modal === duplicateModal) {
+            closeDuplicateModal();
+          }
         }
       });
     });
@@ -184,7 +215,7 @@
       const res = await fetch('/api/jobs');
       const data = await res.json();
       allJobs = data.jobs || [];
-      renderJobsGrid(allJobs);
+      renderJobsGrid(allJobs, false);
     } catch (err) {
       jobsResultsCount.textContent = 'Failed to load jobs';
       jobsGrid.innerHTML = `<div class="empty-state"><p>Unable to connect to local mock server.</p></div>`;
@@ -192,9 +223,14 @@
   }
 
   // Render Job Cards Grid
-  function renderJobsGrid(jobs) {
+  function renderJobsGrid(jobs, isFiltered = false) {
     jobsGrid.innerHTML = '';
-    jobsResultsCount.textContent = `${jobs.length} position${jobs.length === 1 ? '' : 's'} available`;
+    
+    if (isFiltered) {
+      jobsResultsCount.textContent = `Showing ${jobs.length} of ${allJobs.length} open position${allJobs.length === 1 ? '' : 's'}`;
+    } else {
+      jobsResultsCount.textContent = `Showing all ${jobs.length} open position${jobs.length === 1 ? '' : 's'}`;
+    }
 
     if (jobs.length === 0) {
       jobsEmptyState.style.display = 'block';
@@ -209,18 +245,20 @@
       card.id = `job-card-${job.id}`;
 
       card.innerHTML = `
-        <div>
+        <div class="job-card-body">
           <div class="job-card-header">
-            <div>
-              <h3 class="job-card-title">${escapeHtml(job.title)}</h3>
+            <div class="job-card-top-row">
               <span class="job-card-dept">${escapeHtml(job.department)}</span>
+              <span class="demo-role-pill">Demo Role</span>
             </div>
+            <h3 class="job-card-title">${escapeHtml(job.title)}</h3>
           </div>
 
           <div class="job-meta-chips">
             <span class="meta-chip salary">💰 ${escapeHtml(job.salary)}</span>
             <span class="meta-chip">⏱️ ${escapeHtml(job.experience)}</span>
             <span class="meta-chip">📍 ${escapeHtml(job.location)}</span>
+            <span class="meta-chip type">💼 ${escapeHtml(job.type || 'Full-time')}</span>
           </div>
 
           <p class="job-card-desc">${escapeHtml(job.description)}</p>
@@ -232,14 +270,23 @@
 
         <div class="job-card-footer">
           <span class="posted-time">Posted ${escapeHtml(job.posted)}</span>
-          <button type="button" class="btn-view-role" id="btn-view-${job.id}" data-job-id="${job.id}">
-            View Details →
-          </button>
+          <div class="card-actions">
+            <button type="button" class="btn-view-role" id="btn-view-${job.id}" data-job-id="${job.id}" aria-label="View details for ${escapeHtml(job.title)}">
+              View Details →
+            </button>
+            <button type="button" class="btn-card-apply" id="btn-apply-card-${job.id}" data-job-id="${job.id}" aria-label="Apply now for ${escapeHtml(job.title)}">
+              Apply Now
+            </button>
+          </div>
         </div>
       `;
 
-      card.querySelector(`.btn-view-role`).addEventListener('click', () => {
+      card.querySelector(`#btn-view-${job.id}`).addEventListener('click', () => {
         openJobDetailsModal(job);
+      });
+
+      card.querySelector(`#btn-apply-card-${job.id}`).addEventListener('click', () => {
+        openApplicationModal(job);
       });
 
       jobsGrid.appendChild(card);
@@ -248,53 +295,112 @@
 
   // Apply Search & Filters
   function applyFilters() {
-    const query = searchInput.value.trim().toLowerCase();
-    const dept = filterDepartment.value;
+    const rawQuery = searchInput.value || '';
+    const query = rawQuery.trim().toLowerCase();
+    const dept = filterDepartment.value || 'ALL';
+
+    const isFiltered = query.length > 0 || dept !== 'ALL';
+
+    // Show/hide clear filters button in header
+    if (btnClearFiltersHeader) {
+      btnClearFiltersHeader.style.display = isFiltered ? 'inline-flex' : 'none';
+    }
+
+    // Split search query into multiple whitespace-delimited tokens for flexible keyword search
+    const tokens = query.length > 0 ? query.split(/\s+/).filter(Boolean) : [];
 
     const filtered = allJobs.filter(job => {
-      const matchesDept = dept === 'ALL' || job.department === dept;
-      const matchesQuery = !query || 
-        job.title.toLowerCase().includes(query) ||
-        job.description.toLowerCase().includes(query) ||
-        (job.tags && job.tags.some(t => t.toLowerCase().includes(query)));
+      const matchesDept = dept === 'ALL' || (job.department && job.department.toLowerCase() === dept.toLowerCase());
+      
+      let matchesQuery = true;
+      if (tokens.length > 0) {
+        // Build rich corpus of all searchable fields: title, dept, location, type, description, tags, responsibilities, requirements
+        const corpus = [
+          job.title || '',
+          job.department || '',
+          job.location || '',
+          job.type || '',
+          job.description || '',
+          ...(job.tags || []),
+          ...(job.responsibilities || []),
+          ...(job.requirements || [])
+        ].join(' ').toLowerCase();
+
+        matchesQuery = tokens.every(token => corpus.includes(token));
+      }
+
       return matchesDept && matchesQuery;
     });
 
-    renderJobsGrid(filtered);
+    // Update empty state contextual message if no matches
+    if (filtered.length === 0 && emptyStateMessage) {
+      if (rawQuery.trim() && dept !== 'ALL') {
+        emptyStateMessage.textContent = `No open roles match "${rawQuery.trim()}" in ${dept}. Try clearing your filters or refining your keywords.`;
+      } else if (rawQuery.trim()) {
+        emptyStateMessage.textContent = `No open roles match "${rawQuery.trim()}". Try searching for different skills or keywords.`;
+      } else if (dept !== 'ALL') {
+        emptyStateMessage.textContent = `No open roles currently listed under the ${dept} department.`;
+      } else {
+        emptyStateMessage.textContent = `We couldn't find any job openings matching your current search or department filter.`;
+      }
+    }
+
+    renderJobsGrid(filtered, isFiltered);
   }
 
   function resetFilters() {
     searchInput.value = '';
     btnClearSearch.style.display = 'none';
     filterDepartment.value = 'ALL';
-    renderJobsGrid(allJobs);
+    if (btnClearFiltersHeader) {
+      btnClearFiltersHeader.style.display = 'none';
+    }
+    applyFilters();
   }
 
   // Open Details Modal
-  function openJobDetailsModal(job) {
+  function openJobDetailsModal(job, pushState = true) {
+    if (!job) return;
     currentJob = job;
-    modalJobTitle.textContent = job.title;
-    modalJobDept.textContent = job.department;
-    modalJobMeta.textContent = `${job.location} • ${job.type}`;
-    modalJobSalary.textContent = job.salary;
-    modalJobExperience.textContent = job.experience;
-    modalJobPosted.textContent = job.posted;
-    modalJobDescription.textContent = job.description;
+    if (modalJobTitle) modalJobTitle.textContent = job.title;
+    if (modalJobDept) modalJobDept.textContent = job.department;
+    if (modalJobMeta) modalJobMeta.textContent = `${job.location} • ${job.type || 'Full-time'}`;
+    if (modalJobSalary) modalJobSalary.textContent = job.salary;
+    if (modalJobExperience) modalJobExperience.textContent = job.experience;
+    if (modalJobType) modalJobType.textContent = job.type || 'Full-time';
+    if (modalJobLocation) modalJobLocation.textContent = job.location;
+    if (modalJobPosted) modalJobPosted.textContent = `Posted ${job.posted}`;
+    if (modalJobDescription) modalJobDescription.textContent = job.description;
 
-    modalJobResponsibilities.innerHTML = (job.responsibilities || [])
-      .map(r => `<li>${escapeHtml(r)}</li>`).join('');
+    if (modalJobResponsibilities) {
+      modalJobResponsibilities.innerHTML = (job.responsibilities || [])
+        .map(r => `<li>${escapeHtml(r)}</li>`).join('');
+    }
 
-    modalJobRequirements.innerHTML = (job.requirements || [])
-      .map(req => `<li>${escapeHtml(req)}</li>`).join('');
+    if (modalJobRequirements) {
+      modalJobRequirements.innerHTML = (job.requirements || [])
+        .map(req => `<li>${escapeHtml(req)}</li>`).join('');
+    }
 
-    modalJobTags.innerHTML = (job.tags || [])
-      .map(tag => `<span class="skill-tag">${escapeHtml(tag)}</span>`).join('');
+    if (modalJobTags) {
+      modalJobTags.innerHTML = (job.tags || [])
+        .map(tag => `<span class="skill-tag">${escapeHtml(tag)}</span>`).join('');
+    }
 
-    jobDetailsModal.style.display = 'flex';
+    if (jobDetailsModal) {
+      jobDetailsModal.style.display = 'flex';
+    }
+
+    if (pushState && window.location.hash !== `#job=${job.id}`) {
+      window.history.pushState({ modal: 'job-details', jobId: job.id }, '', `#job=${job.id}`);
+    }
   }
 
-  function closeDetailsModal() {
+  function closeDetailsModal(popHistory = false) {
     jobDetailsModal.style.display = 'none';
+    if (popHistory && window.location.hash.startsWith('#job=')) {
+      window.history.pushState(null, '', window.location.pathname + window.location.search);
+    }
   }
 
   // Open Application Modal
