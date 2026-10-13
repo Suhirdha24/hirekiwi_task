@@ -77,7 +77,7 @@ The primary objective of this Master Test Plan is to establish a rigorous, risk-
 | **Boundary Testing** | Test length limits (2–60 chars, 10-digit phone, 0–40 yrs exp, 5MB file). | Playwright boundary suite, boundary value analysis (BVA). |
 | **Concurrency & Debouncing** | Ensure rapid repeated clicks do not create duplicate API requests. | Rapid button clicks (< 100ms interval) via Playwright evaluate. |
 | **Error Resilience Testing** | Verify behavior during server failure (500) and network disconnects. | QA Console toggles, simulated latency injection. |
-| **Regression Testing** | Confirm changes to application form do not break job search/filtering. | Full 28-test Playwright suite execution. |
+| **Regression Testing** | Confirm changes to application form do not break job search/filtering. | Full 36-test Playwright suite execution. |
 | **Accessibility (a11y)** | Ensure screen reader compatibility, ARIA alert roles, and visible focus. | DevTools a11y audit, keyboard tab-traversal inspection. |
 | **Cross-Viewport Testing** | Verify no horizontal scrolling, responsive grid wrapping, and tap targets. | Playwright viewport resizing (Desktop, Tablet, Mobile). |
 
