@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CareerHub | Job Application & Assessment Portal</title>
+  <meta name="description" content="QA Engineer Assessment Job Portal: Browse verified job listings, inspect job requirements, and submit job applications.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Top QA Simulation Banner (For exploratory and automated resilience testing) -->
+  <aside class="qa-control-panel" id="qa-control-panel" aria-label="QA Test Controller">
+    <div class="qa-control-content">
+      <div class="qa-badge">
+        <span class="qa-dot"></span>
+        <span class="qa-title">QA Test Harness Console</span>
+      </div>
+      <div class="qa-toggles">
+        <label class="toggle-label" for="toggle-sim-delay">
+          <input type="checkbox" id="toggle-sim-delay">
+          <span class="toggle-slider"></span>
+          <span class="toggle-text">Network Delay (3s)</span>
+        </label>
+        <label class="toggle-label" for="toggle-sim-500">
+          <input type="checkbox" id="toggle-sim-500">
+          <span class="toggle-slider"></span>
+          <span class="toggle-text">Simulate HTTP 500</span>
+        </label>
+        <label class="toggle-label" for="toggle-sim-offline">
+          <input type="checkbox" id="toggle-sim-offline">
+          <span class="toggle-slider"></span>
+          <span class="toggle-text">Simulate Offline</span>
+        </label>
+        <button type="button" class="qa-btn" id="btn-reset-data" title="Wipe stored test applications">Reset Applications</button>
+      </div>
+      <div class="qa-status" id="qa-status-pill">Server: Online 200 OK</div>
+    </div>
+  </aside>
+
+  <!-- Global Navigation Header -->
+  <header class="app-header">
+    <div class="nav-container">
+      <a href="/" class="brand-logo" id="nav-brand-logo">
+        <div class="logo-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+          </svg>
+        </div>
+        <span class="brand-name">Career<strong>Hub</strong></span>
+        <span class="portal-tag">QA Portal</span>
+      </a>
+
+      <nav class="nav-menu">
+        <a href="#jobs-section" class="nav-link active" id="nav-link-jobs">Explore Jobs</a>
+        <a href="#submissions-section" class="nav-link" id="nav-link-submissions">My Submissions (<span id="submissions-badge-count">0</span>)</a>
+        <a href="#assessment-info" class="nav-link" id="nav-link-guidelines">QA Scope</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section & Search / Filter Controls -->
+  <main class="main-content">
+    <section class="hero-section">
+      <div class="hero-wrapper">
+        <span class="hero-chip">✨ Hiring Openings • Freshers to Experienced</span>
+        <h1 class="hero-title">Discover Verified Roles. <br>Apply with Confidence.</h1>
+        <p class="hero-subtitle">Browse transparent job listings with upfront salaries, clear experience brackets, and streamlined application workflows.</p>
+
+        <!-- Search & Filter Bar -->
+        <div class="search-filter-card" role="search">
+          <div class="search-input-group">
+            <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="search-input" placeholder="Search by job title, skill (e.g. Playwright, QA), or keyword..." autocomplete="off">
+            <button type="button" class="clear-search-btn" id="btn-clear-search" style="display:none;" aria-label="Clear search">✕</button>
+          </div>
+
+          <div class="filter-dropdown-group">
+            <select id="filter-department" aria-label="Filter by department">
+              <option value="ALL">All Departments</option>
+              <option value="Quality Assurance">Quality Assurance</option>
+              <option value="Engineering">Engineering</option>
+              <option value="Infrastructure">Infrastructure</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Job Listings Grid Section -->
+    <section class="jobs-section" id="jobs-section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Available Positions</h2>
+          <p class="section-subtitle">Showing active verified openings matching your filters</p>
+        </div>
+        <div class="results-count" id="jobs-results-count">Loading roles...</div>
+      </div>
+
+      <div class="jobs-grid" id="jobs-grid">
+        <!-- Rendered dynamically by app.js -->
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state" id="jobs-empty-state" style="display: none;">
+        <div class="empty-icon">🔍</div>
+        <h3>No matching roles found</h3>
+        <p>Try tweaking your keyword search or selecting "All Departments".</p>
+        <button type="button" class="btn-primary" id="btn-reset-filters">Reset All Filters</button>
+      </div>
+    </section>
+
+    <!-- Submissions Audit Section -->
+    <section class="submissions-section" id="submissions-section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Submitted Applications Registry</h2>
+          <p class="section-subtitle">Local test submission store for verifying duplicate detection and persistence</p>
+        </div>
+      </div>
+
+      <div class="submissions-table-card">
+        <div class="table-responsive">
+          <table class="submissions-table" id="submissions-table">
+            <thead>
+              <tr>
+                <th>Application ID</th>
+                <th>Job Title</th>
+                <th>Candidate Name</th>
+                <th>Candidate Email</th>
+                <th>Experience</th>
+                <th>Submitted At</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="submissions-table-body">
+              <tr>
+                <td colspan="7" class="text-center">No applications submitted yet. Apply for a role above!</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Assessment Guidelines Section -->
+    <section class="assessment-info" id="assessment-info">
+      <div class="info-card">
+        <h3>📋 QA Engineer Workflow Assessment Scope</h3>
+        <ul class="scope-list">
+          <li><strong>Job Listings:</strong> Titles, salaries, experience brackets, tags, and descriptions verified.</li>
+          <li><strong>Navigation:</strong> Modal and direct deep linking with accurate data binding.</li>
+          <li><strong>Form Validation:</strong> Missing fields, invalid email format, whitespace evasion, and boundary limits.</li>
+          <li><strong>Submission Behavior:</strong> Debounced double-click prevention, duplicate email rejection.</li>
+          <li><strong>Resilience:</strong> Controllable 3s delay, 500 server error, and offline error handling.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <!-- Job Details Modal -->
+  <div class="modal-backdrop" id="job-details-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="modal-job-title">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <div>
+          <span class="chip-badge" id="modal-job-dept">Department</span>
+          <h2 class="modal-title" id="modal-job-title">Job Title</h2>
+          <div class="modal-meta" id="modal-job-meta">Location • Full-time</div>
+        </div>
+        <button type="button" class="btn-close" id="btn-close-details" aria-label="Close details modal">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="job-metrics-row">
+          <div class="metric-box">
+            <span class="metric-label">Offered CTC / Salary</span>
+            <span class="metric-value highlight" id="modal-job-salary">₹0 LPA</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-label">Experience Required</span>
+            <span class="metric-value" id="modal-job-experience">0 yrs</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-label">Posted Date</span>
+            <span class="metric-value" id="modal-job-posted">Recently</span>
+          </div>
+        </div>
+
+        <div class="modal-section">
+          <h3>Role Overview</h3>
+          <p id="modal-job-description">Role description text...</p>
+        </div>
+
+        <div class="modal-section">
+          <h3>Key Responsibilities</h3>
+          <ul class="bullet-list" id="modal-job-responsibilities"></ul>
+        </div>
+
+        <div class="modal-section">
+          <h3>Qualifications & Requirements</h3>
+          <ul class="bullet-list" id="modal-job-requirements"></ul>
+        </div>
+
+        <div class="modal-section">
+          <h3>Required Skills</h3>
+          <div class="tags-row" id="modal-job-tags"></div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" id="btn-cancel-details">Back to Listings</button>
+        <button type="button" class="btn-primary" id="btn-open-apply">Apply for this Position →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Job Application Form Modal -->
+  <div class="modal-backdrop" id="application-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="apply-modal-title">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <span class="chip-badge">Job Application Form</span>
+          <h2 class="modal-title" id="apply-modal-title">Apply for Role</h2>
+          <p class="modal-subtitle" id="apply-role-summary">Role summary</p>
+        </div>
+        <button type="button" class="btn-close" id="btn-cancel-application-top" aria-label="Close application form">✕</button>
+      </div>
+
+      <!-- Application Form -->
+      <form id="job-application-form" novalidate>
+        <input type="hidden" id="applicant-job-id" value="">
+
+        <!-- Global Alert Banner for Server Errors -->
+        <div class="form-alert-banner" id="form-error-banner" style="display: none;" role="alert">
+          <span class="alert-icon">⚠️</span>
+          <div class="alert-content">
+            <strong id="form-error-title">Submission Error</strong>
+            <p id="form-error-message">An unexpected error occurred.</p>
+          </div>
+          <button type="button" class="alert-retry-btn" id="btn-retry-submit">Retry</button>
+        </div>
+
+        <div class="modal-body form-body">
+          <!-- Full Name -->
+          <div class="form-group">
+            <label for="applicant-name" class="form-label">
+              Full Name <span class="required">*</span>
+            </label>
+            <input type="text" id="applicant-name" class="form-input" placeholder="e.g. Jane Doe" required autocomplete="name">
+            <span class="field-error" id="error-name" style="display: none;"></span>
+          </div>
+
+          <!-- Email Address -->
+          <div class="form-group">
+            <label for="applicant-email" class="form-label">
+              Email Address <span class="required">*</span>
+            </label>
+            <input type="email" id="applicant-email" class="form-input" placeholder="e.g. jane.doe@example.com" required autocomplete="email">
+            <span class="field-error" id="error-email" style="display: none;"></span>
+          </div>
+
+          <!-- Phone Number & Experience Row -->
+          <div class="form-row">
+            <div class="form-group col-half">
+              <label for="applicant-phone" class="form-label">
+                Phone Number <span class="required">*</span>
+              </label>
+              <input type="tel" id="applicant-phone" class="form-input" placeholder="10-digit mobile" maxlength="10" required autocomplete="tel">
+              <span class="field-error" id="error-phone" style="display: none;"></span>
+            </div>
+
+            <div class="form-group col-half">
+              <label for="applicant-experience" class="form-label">
+                Experience (Years) <span class="required">*</span>
+              </label>
+              <input type="number" id="applicant-experience" class="form-input" min="0" max="40" step="1" value="1" required>
+              <span class="field-error" id="error-experience" style="display: none;"></span>
+            </div>
+          </div>
+
+          <!-- Resume Attachment -->
+          <div class="form-group">
+            <label for="applicant-resume" class="form-label">
+              Resume Document (.pdf, .doc, .docx) <span class="required">*</span>
+            </label>
+            <input type="file" id="applicant-resume" class="form-file-input" accept=".pdf,.doc,.docx" required>
+            <div class="file-hint">Max file size: 5MB. Accepted formats: PDF, DOC, DOCX.</div>
+            <span class="field-error" id="error-resume" style="display: none;"></span>
+          </div>
+
+          <!-- Cover Letter -->
+          <div class="form-group">
+            <label for="applicant-cover-letter" class="form-label">Cover Letter / Note to Recruiter</label>
+            <textarea id="applicant-cover-letter" class="form-textarea" rows="3" placeholder="Tell us why you're a great fit for this position..."></textarea>
+          </div>
+
+          <!-- Consent Checkbox -->
+          <div class="form-group consent-group">
+            <label class="checkbox-label" for="applicant-consent">
+              <input type="checkbox" id="applicant-consent" required>
+              <span>I confirm that the provided information is accurate and agree to recruitment processing. <span class="required">*</span></span>
+            </label>
+            <span class="field-error" id="error-consent" style="display: none;"></span>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="btn-cancel-application">Cancel</button>
+          <button type="submit" class="btn-primary" id="btn-submit-application">
+            <span class="btn-text">Submit Application</span>
+            <span class="spinner" id="submit-spinner" style="display: none;"></span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Success Confirmation Modal -->
+  <div class="modal-backdrop" id="success-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="success-title">
+    <div class="modal-card modal-sm text-center">
+      <div class="success-icon-badge">✓</div>
+      <h2 class="modal-title" id="success-title">Application Submitted!</h2>
+      <p class="modal-subtitle">Thank you for applying. Your application has been logged into our hiring system.</p>
+      
+      <div class="application-ticket">
+        <span class="ticket-label">Application Tracking ID</span>
+        <code class="ticket-id" id="success-app-id">APP-000000</code>
+      </div>
+
+      <div class="modal-footer justify-center">
+        <button type="button" class="btn-primary" id="btn-close-success">Done & View Submissions</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Duplicate Application Modal -->
+  <div class="modal-backdrop" id="duplicate-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="duplicate-title">
+    <div class="modal-card modal-sm text-center">
+      <div class="warning-icon-badge">!</div>
+      <h2 class="modal-title" id="duplicate-title">Duplicate Submission</h2>
+      <p class="modal-subtitle" id="duplicate-message">An application has already been submitted with this email for this position.</p>
+      
+      <div class="modal-footer justify-center">
+        <button type="button" class="btn-secondary" id="btn-close-duplicate">Dismiss</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="app-footer">
+    <div class="footer-container">
+      <p>© 2026 CareerHub QA Portal • Built for QA Engineer Assessment</p>
+      <div class="footer-links">
+        <span>Playwright Automation Ready</span>
+        <span>•</span>
+        <span>WCAG 2.1 AA Accessible</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
