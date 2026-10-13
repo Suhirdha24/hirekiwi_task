@@ -1,4 +1,8 @@
-// Native Node.js Server for Mock Job Application Portal
+// ==============================================================================
+// CareerHub QA Portal - Backend Server & MongoDB Integration
+// Built for HireKiwi QA Engineer Assessment
+// ==============================================================================
+
 try {
   require('dotenv').config();
 } catch (e) {}
@@ -8,48 +12,27 @@ const fs = require('fs');
 const path = require('path');
 const dns = require('dns');
 
-// Public DNS for reliable SRV resolution on Windows
+// Public DNS for reliable SRV resolution on Windows environments
 try {
   dns.setServers(['8.8.8.8', '1.1.1.1']);
 } catch (e) {}
 
-const PORT = process.env.PORT || 3000;
+const PORT = parseInt(process.env.PORT, 10) || 3000;
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || '*';
 const PUBLIC_DIR = path.join(__dirname, 'src');
 
 // MongoDB Atlas Integration State
 let mongoClient = null;
-let submissionsCollection = null;
+let dbInstance = null;
+let jobsCollection = null;
+let applicationsCollection = null;
 let isMongoConnected = false;
+let mongoPingAcknowledged = false;
+let mongoClusterHost = '';
+let mongoDiagnostic = 'Database initialization pending';
 
-async function initMongoDB() {
-  const uri = process.env.MONGODB_URI;
-  if (!uri) {
-    console.log('[Database] No MONGODB_URI found; operating in local in-memory mode.');
-    return;
-  }
-  try {
-    const { MongoClient } = require('mongodb');
-    mongoClient = new MongoClient(uri, { serverSelectionTimeoutMS: 5000 });
-    await mongoClient.connect();
-    const db = mongoClient.db('careerhub');
-    submissionsCollection = db.collection('submissions');
-    isMongoConnected = true;
-    console.log('[MongoDB Atlas] Connected successfully to cluster0.lo94xku.mongodb.net/careerhub');
-
-    const existing = await submissionsCollection.find().toArray();
-    if (existing && existing.length > 0) {
-      submissions = existing.map(doc => {
-        const { _id, ...rest } = doc;
-        return rest;
-      });
-      console.log(`[MongoDB Atlas] Synced ${submissions.length} submission(s) into active session store.`);
-    }
-  } catch (err) {
-    console.warn('[MongoDB Atlas] Connection failed; running in fallback in-memory mode:', err.message);
-  }
-}
-
-// In-Memory Database for local mock testing
+// Seed / In-Memory verified Job Openings
 let jobs = [
   {
     id: 'JOB-101',
@@ -141,14 +124,105 @@ let jobs = [
   }
 ];
 
-// In-Memory Submissions Store: keyed by jobId + email
+// Active Submissions Store
 let submissions = [];
 
-// Simulation State Configuration (Can also be overridden per request via query params)
+// Simulation State Configuration (Can also be overridden per request via query params or headers)
 let serverSimulation = {
   simulate500: false,
   simulateDelayMs: 0
 };
+
+// Safe URI host parser (never logs credentials)
+function extractHostSafely(uri) {
+  try {
+    const parsed = new URL(uri);
+    return parsed.hostname;
+  } catch {
+    return 'cluster0.lo94xku.mongodb.net';
+  }
+}
+
+// Connect & Verify MongoDB Atlas Connectivity
+async function initMongoDB() {
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    mongoDiagnostic = 'No MONGODB_URI environment variable detected; operating in local in-memory mode.';
+    console.log(`[Database] ${mongoDiagnostic}`);
+    return;
+  }
+
+  mongoClusterHost = extractHostSafely(uri);
+
+  try {
+    const { MongoClient } = require('mongodb');
+    mongoClient = new MongoClient(uri, {
+      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 5000,
+      tls: true
+    });
+
+    await mongoClient.connect();
+    dbInstance = mongoClient.db('careerhub');
+
+    // Confirm database connectivity by executing a harmless ping operation
+    const pingRes = await dbInstance.command({ ping: 1 });
+    if (pingRes && (pingRes.ok === 1 || pingRes.ok === true)) {
+      mongoPingAcknowledged = true;
+      isMongoConnected = true;
+      mongoDiagnostic = 'Connected and verified via MongoDB ping command.';
+      console.log(`[MongoDB Atlas] Verified connection to ${mongoClusterHost}/careerhub (ping acknowledged).`);
+
+      jobsCollection = dbInstance.collection('jobs');
+      applicationsCollection = dbInstance.collection('applications');
+
+      // Seed jobs collection if empty
+      const jobCount = await jobsCollection.countDocuments();
+      if (jobCount === 0) {
+        await jobsCollection.insertMany(jobs.map(j => ({ ...j })));
+        console.log(`[MongoDB Atlas] Initialized jobs collection with ${jobs.length} verified listings.`);
+      } else {
+        const dbJobs = await jobsCollection.find().toArray();
+        if (dbJobs && dbJobs.length > 0) {
+          jobs = dbJobs.map(doc => {
+            const { _id, ...rest } = doc;
+            return rest;
+          });
+          console.log(`[MongoDB Atlas] Synced ${jobs.length} jobs from database.`);
+        }
+      }
+
+      // Sync existing application submissions
+      const existingApps = await applicationsCollection.find().toArray();
+      if (existingApps && existingApps.length > 0) {
+        submissions = existingApps.map(doc => {
+          const { _id, ...rest } = doc;
+          return rest;
+        });
+        console.log(`[MongoDB Atlas] Synced ${submissions.length} submission(s) into active session store.`);
+      }
+    } else {
+      throw new Error('Database ping command failed to return ok: 1');
+    }
+  } catch (err) {
+    isMongoConnected = false;
+    mongoPingAcknowledged = false;
+
+    const errMsg = err.message || '';
+    if (errMsg.includes('SSL alert number 80') || errMsg.includes('tlsv1 alert internal error')) {
+      mongoDiagnostic = 'TLS Handshake Alert 80: Connection rejected by Atlas edge proxy. Whitelist client IP or 0.0.0.0/0 in MongoDB Atlas Network Access.';
+    } else if (errMsg.includes('ECONNREFUSED') || errMsg.includes('querySrv')) {
+      mongoDiagnostic = 'DNS/Network Error: Unable to resolve MongoDB Atlas SRV records. Check network connection and public DNS configuration.';
+    } else if (errMsg.includes('Authentication failed')) {
+      mongoDiagnostic = 'Authentication Failure: Database user credentials rejected by cluster.';
+    } else {
+      mongoDiagnostic = `Connection diagnostic: ${errMsg.slice(0, 150)}`;
+    }
+
+    console.warn(`[MongoDB Atlas] Connection diagnostic: ${mongoDiagnostic}`);
+    console.log('[CareerHub Portal] Operating with high-reliability in-memory fallback.');
+  }
+}
 
 // MIME types lookup
 const MIME_TYPES = {
@@ -167,7 +241,7 @@ const server = http.createServer((req, res) => {
   const pathname = parsedUrl.pathname;
 
   // Enable CORS & JSON headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', CLIENT_ORIGIN);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Simulate-Error, X-Simulate-Delay');
 
@@ -177,16 +251,49 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // ============================================================================
   // API Routes
+  // ============================================================================
   if (pathname.startsWith('/api/')) {
-    // 1. GET /api/jobs
-    if (pathname === '/api/jobs' && req.method === 'GET') {
+
+    // 0. GET /api/health — Diagnostic health check distinguishing server vs DB
+    if (pathname === '/api/health' && req.method === 'GET') {
+      const healthPayload = {
+        status: isMongoConnected ? 'healthy' : 'degraded',
+        server: {
+          status: 'online',
+          uptime: Math.round(process.uptime()),
+          environment: NODE_ENV,
+          port: PORT
+        },
+        database: {
+          connected: isMongoConnected,
+          provider: 'mongodb',
+          cluster: mongoClusterHost || 'cluster0.lo94xku.mongodb.net',
+          database: 'careerhub',
+          pingAcknowledged: mongoPingAcknowledged,
+          mode: isMongoConnected ? 'mongodb-atlas' : 'in-memory-fallback',
+          diagnostic: mongoDiagnostic
+        },
+        timestamp: new Date().toISOString()
+      };
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ jobs }));
+      res.end(JSON.stringify(healthPayload, null, 2));
       return;
     }
 
-    // 2. GET /api/jobs/:id
+    // 1. GET /api/jobs — Retrieve verified job listings
+    if (pathname === '/api/jobs' && req.method === 'GET') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        jobs,
+        total: jobs.length,
+        source: isMongoConnected ? 'mongodb' : 'memory'
+      }));
+      return;
+    }
+
+    // 2. GET /api/jobs/:id — Retrieve single job details by ID
     if (pathname.startsWith('/api/jobs/') && req.method === 'GET') {
       const id = pathname.replace('/api/jobs/', '');
       const job = jobs.find(j => j.id === id);
@@ -195,27 +302,27 @@ const server = http.createServer((req, res) => {
         res.end(JSON.stringify({ job }));
       } else {
         res.writeHead(404, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Job opening not found' }));
+        res.end(JSON.stringify({ error: 'Job opening not found', id }));
       }
       return;
     }
 
-    // 3. POST /api/apply
-    if (pathname === '/api/apply' && req.method === 'POST') {
+    // 3. POST /api/applications & POST /api/apply — Submit candidate application
+    if ((pathname === '/api/applications' || pathname === '/api/apply') && req.method === 'POST') {
       let body = '';
       req.on('data', chunk => { body += chunk; });
-      req.on('end', () => {
+      req.on('end', async () => {
         try {
           const data = JSON.parse(body || '{}');
 
-          // Check simulation overrides via query or header or server toggle
+          // Check simulation overrides via query params, custom headers, or server state
           const sim500 = parsedUrl.searchParams.get('simulate500') === 'true' || 
                          req.headers['x-simulate-error'] === '500' || 
                          serverSimulation.simulate500;
 
           const delayMs = parseInt(parsedUrl.searchParams.get('delay') || req.headers['x-simulate-delay'] || serverSimulation.simulateDelayMs, 10) || 0;
 
-          const executeHandler = () => {
+          const executeHandler = async () => {
             // Simulated 500 Server Error
             if (sim500) {
               res.writeHead(500, { 'Content-Type': 'application/json' });
@@ -227,16 +334,23 @@ const server = http.createServer((req, res) => {
               return;
             }
 
-            // Input Validation
+            // Server-Side Input Validation
+            const jobId = (data.jobId || '').trim();
             const fullName = (data.fullName || '').trim();
             const email = (data.email || '').trim().toLowerCase();
             const phone = (data.phone || '').trim();
             const experience = data.experience;
-            const jobId = (data.jobId || '').trim();
 
             if (!jobId) {
               res.writeHead(400, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify({ error: 'Missing Job ID reference.' }));
+              res.end(JSON.stringify({ field: 'jobId', error: 'Missing Job ID reference.' }));
+              return;
+            }
+
+            const matchingJob = jobs.find(j => j.id === jobId);
+            if (!matchingJob) {
+              res.writeHead(404, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ field: 'jobId', error: 'Referenced job opening does not exist.' }));
               return;
             }
 
@@ -266,7 +380,7 @@ const server = http.createServer((req, res) => {
               return;
             }
 
-            if (experience !== undefined && (experience < 0 || experience > 40)) {
+            if (experience === undefined || isNaN(Number(experience)) || Number(experience) < 0 || Number(experience) > 40) {
               res.writeHead(400, { 'Content-Type': 'application/json' });
               res.end(JSON.stringify({ field: 'experience', error: 'Experience must be between 0 and 40 years.' }));
               return;
@@ -278,7 +392,7 @@ const server = http.createServer((req, res) => {
               return;
             }
 
-            // Duplicate Application Prevention (Check if same email already submitted for this job)
+            // Safe Duplicate Application Prevention
             const isDuplicate = submissions.some(s => s.jobId === jobId && s.email === email);
             if (isDuplicate) {
               res.writeHead(409, { 'Content-Type': 'application/json' });
@@ -291,25 +405,32 @@ const server = http.createServer((req, res) => {
               return;
             }
 
-            // Save new application
+            // Build Application Record
             const applicationId = `APP-${Date.now().toString().slice(-6)}`;
             const submissionRecord = {
               applicationId,
               jobId,
+              jobTitle: matchingJob.title,
               fullName,
               email,
               phone: phoneDigits,
-              experience: experience || 0,
+              experience: Number(experience),
               resumeName: data.resumeName || 'resume.pdf',
-              coverLetter: (data.coverLetter || '').trim(),
+              coverLetter: (data.coverLetter || '').trim().slice(0, 1000),
               submittedAt: new Date().toISOString()
             };
-            submissions.push(submissionRecord);
-            if (isMongoConnected && submissionsCollection) {
-              submissionsCollection.insertOne({ ...submissionRecord }).catch(err => {
-                console.error('[MongoDB Atlas] Insert error:', err.message);
-              });
+
+            // Persist to MongoDB if connected
+            if (isMongoConnected && applicationsCollection) {
+              try {
+                await applicationsCollection.insertOne({ ...submissionRecord });
+              } catch (mongoErr) {
+                console.error('[MongoDB Atlas] Insert error:', mongoErr.message);
+              }
             }
+
+            // Persist to active session store
+            submissions.push(submissionRecord);
 
             res.writeHead(201, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({
@@ -324,7 +445,7 @@ const server = http.createServer((req, res) => {
           if (delayMs > 0) {
             setTimeout(executeHandler, delayMs);
           } else {
-            executeHandler();
+            await executeHandler();
           }
 
         } catch (err) {
@@ -335,8 +456,8 @@ const server = http.createServer((req, res) => {
       return;
     }
 
-    // 4. GET /api/submissions
-    if (pathname === '/api/submissions' && req.method === 'GET') {
+    // 4. GET /api/submissions & GET /api/applications — Registry for audit & verification
+    if ((pathname === '/api/submissions' || pathname === '/api/applications') && req.method === 'GET') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({
         count: submissions.length,
@@ -346,21 +467,24 @@ const server = http.createServer((req, res) => {
       return;
     }
 
-    // 5. POST /api/reset (Reset test submissions & toggle states)
+    // 5. POST /api/reset — Reset test submissions & simulation toggles
     if (pathname === '/api/reset' && req.method === 'POST') {
       submissions = [];
       serverSimulation = { simulate500: false, simulateDelayMs: 0 };
-      if (isMongoConnected && submissionsCollection) {
-        submissionsCollection.deleteMany({}).catch(err => {
+      if (isMongoConnected && applicationsCollection) {
+        applicationsCollection.deleteMany({}).catch(err => {
           console.error('[MongoDB Atlas] Reset error:', err.message);
         });
       }
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: true, message: 'Test submissions store and simulation states reset.' }));
+      res.end(JSON.stringify({
+        success: true,
+        message: 'Test submissions store and simulation states reset.'
+      }));
       return;
     }
 
-    // 6. POST /api/simulate
+    // 6. POST /api/simulate — Toggle QA simulation modes
     if (pathname === '/api/simulate' && req.method === 'POST') {
       let body = '';
       req.on('data', chunk => { body += chunk; });
@@ -385,14 +509,15 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // ============================================================================
   // Static File Serving
+  // ============================================================================
   let filePath = path.join(PUBLIC_DIR, pathname === '/' ? 'index.html' : pathname);
   const ext = path.extname(filePath).toLowerCase();
 
   fs.readFile(filePath, (err, content) => {
     if (err) {
       if (err.code === 'ENOENT') {
-        // Fallback to index.html for SPA-style routing if file not found
         fs.readFile(path.join(PUBLIC_DIR, 'index.html'), (fallbackErr, fallbackContent) => {
           if (fallbackErr) {
             res.writeHead(404, { 'Content-Type': 'text/plain' });
