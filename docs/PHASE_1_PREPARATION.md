@@ -50,7 +50,7 @@ The following scenarios require a fully controllable local mock application:
 * **Node.js**: v24.18.1
 * **npm**: 11.16.0
 * **Test Automation Framework**: Playwright Test (`@playwright/test`)
-* **Repository**: `https://github.com/Suhirdha24/infinitica_task.git` (branch `main`)
+* **Repository**: `https://github.com/Suhirdha24/hirekiwi_task.git` (branch `main`)
 * **Directory Layout**:
   * `src/`: Mock Job Portal web application.
   * `tests/`: Automated Playwright test suites.

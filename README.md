@@ -427,8 +427,8 @@ The QA audit identified, reproduced, and verified defects across the recruitment
 
 ### 1. Clone & Install
 ```bash
-git clone https://github.com/Suhirdha24/infinitica_task.git
-cd infinitica_task
+git clone https://github.com/Suhirdha24/hirekiwi_task.git
+cd hirekiwi_task
 npm install
 ```
 
