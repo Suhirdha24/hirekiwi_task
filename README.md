@@ -38,6 +38,7 @@ All five core assessment deliverables are fully authored, structured, and availa
 11. [Defect Summary & Complete Bug Reports](#-defect-summary--complete-bug-reports)
 12. [Quick Start & Setup Instructions](#-quick-start--setup-instructions)
 13. [Environment Configuration](#-environment-configuration)
+14. [Known Limitations & Assumptions](#-known-limitations--assumptions)
 
 ---
 
@@ -464,3 +465,18 @@ CLIENT_ORIGIN=*
 ADMIN_KEY=your_secure_admin_passkey_here
 MONGODB_URI=mongodb+srv://<username>:<password>@<cluster-name>.mongodb.net/careerhub?retryWrites=true&w=majority&appName=Cluster0
 ```
+
+---
+
+## ⚠️ Known Limitations & Assumptions
+
+1. **MongoDB Atlas IP Access Rules**:
+   * MongoDB Atlas requires the calling machine's IP address to be whitelisted in Atlas Network Access (or `0.0.0.0/0` enabled for universal access). When executing in environments where outbound IP changes or Atlas network restrictions prevent TLS handshake completion, CareerHub automatically falls back to its internal in-memory store. The application workflow and all 36 Playwright tests operate with 100% reliability regardless of external cloud network state.
+2. **Document File Storage**:
+   * File uploads validate document extensions (`.pdf`, `.doc`, `.docx`) and file size ($\le$ 5MB). In this assessment test harness, metadata is tracked in the application state rather than streaming bytes to external cloud object storage (e.g. AWS S3 or Google Cloud Storage).
+3. **Session vs. Persistent Storage Across Restarts**:
+   * When running in in-memory fallback mode, newly submitted candidate applications persist for the entire node server process lifetime and across test runs. A full process restart re-seeds the initial dataset unless MongoDB Atlas is active.
+4. **Email Notification Dispatch**:
+   * Application receipts and stage updates are tracked live via the Candidate Dashboard and tracking IDs (`APP-XXXXXX`) rather than dispatching external SMTP emails (e.g., SendGrid/AWS SES).
+5. **Administrative Authentication**:
+   * The Recruiter Admin Portal enforces passkey authentication via `ADMIN_KEY` / `X-Admin-Key` header verification. Enterprise SSO (OAuth 2.0 / SAML) is intentionally out-of-scope for this local assessment prototype.
