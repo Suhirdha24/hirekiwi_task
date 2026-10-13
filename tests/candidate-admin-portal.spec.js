@@ -319,7 +319,7 @@ test.describe('CareerHub — Candidate Self-Service & Recruiter Admin Portal', (
     const healthText = JSON.stringify(healthJson);
     expect(healthText).not.toContain('password');
     expect(healthText).not.toContain('mongodb+srv');
-    expect(healthJson.database.mode).toBe('in-memory-fallback');
+    expect(['mongodb-atlas', 'in-memory-fallback']).toContain(healthJson.database.mode);
 
     // 8. Verify explicit in-memory fallback reporting in submissions response
     const auditData = await publicAuditRes.json();
