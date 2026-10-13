@@ -127,8 +127,8 @@ The primary objective of this Master Test Plan is to establish a rigorous, risk-
 
 ### 8.2 Exit Criteria
 * [x] 100% of P0 and P1 test cases executed.
-* [x] Minimum 18 detailed manual test cases fully documented.
-* [x] Minimum 5 automated scenarios executed (Exceeded: 28 automated tests passing).
+* [x] Minimum 15 detailed manual test cases fully documented (Exceeded: 25 test cases).
+* [x] Minimum 5 automated scenarios executed (Exceeded: 35 automated tests passing with 100% pass rate).
 * [x] 0 open Critical (S1) or Major (S2) defects.
 * [x] All QA Test Harness toggles verified and functional.
 * [x] Full regression test run completes with 100% pass rate.
